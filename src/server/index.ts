@@ -47,7 +47,7 @@ app.use(express.static(path.join(__dirname, '../public')))
         }));
       res.send(result);
       client.release();
-      io.sockets.emit('update_clock', { id: result, segments: newEntry.segments, name: newEntry.name, value: newEntry.value });
+      io.sockets.emit('update_clock', { id: result.rows[0].id, segments: newEntry.segments, name: newEntry.name, value: newEntry.value });
     } catch (err) {
       console.error(err);
       res.status(500).send("Error " + err);
@@ -126,6 +126,7 @@ function makeInt(value: any) {
   } if (typeof value === "string") {
     return parseInt(value);
   }
+  throw `Not correct type ${typeof value} of ${JSON.stringify(value)}`
 }
 
 // start our simple server up on localhost:3000

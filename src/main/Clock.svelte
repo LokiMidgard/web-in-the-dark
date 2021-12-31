@@ -28,7 +28,7 @@
                 "Content-Type": "application/json",
             },
         });
-        console.debug(response.status);
+        console.debug("Status patch",response.status);
     }
 
     export async function deleteClock(clock: ClockInstance): Promise<void> {
@@ -39,7 +39,7 @@
                 "Content-Type": "application/json",
             },
         });
-        console.debug(response.status);
+        console.debug("status delete",response.status);
     }
 
     export async function createClock(
@@ -52,7 +52,7 @@
             },
             body: JSON.stringify(clock),
         });
-        console.debug(response.status);
+        console.debug("Status PUT",response.status);
         const id = await response.text();
         return parseInt(id);
     }
@@ -78,7 +78,6 @@
         for (let index = 0; index < clock; index++) {
             result.push(index);
         }
-        console.log(result);
         return result;
     }
     function change(change: number) {

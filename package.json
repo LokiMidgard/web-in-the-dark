@@ -6,7 +6,7 @@
     "build": "rollup -c",
     "dev": "rollup -c -w",
     "startDev": "sirv public --no-clear",
-    
+    "tsc": "tsc -p tsconfig2.json",
     "prestart": "tsc -p tsconfig2.json && rollup -c",
     "start": "node dist/index.js",
     "check": "svelte-check --tsconfig ./tsconfig.json"
@@ -29,12 +29,13 @@
     "svelte-check": "^2.0.0",
     "svelte-preprocess": "^4.0.0",
     "tape": "^4.7.0",
-    "tslib": "^2.0.0",
-    "typescript": "^4.0.0"
+    "tsc": "^2.0.3",
+    "tslib": "^2.0.0"
   },
   "dependencies": {
     "express": "^4.15.2",
     "pg": "^8.7.1",
+    "typescript": "^4.0.0",
     "sirv-cli": "^1.0.0",
     "socket.io": "^4.4.0",
     "socket.io-client": "^4.4.0"

@@ -9,7 +9,7 @@
 	const socket = ioclient();
 
 	socket.on("update_clock", async (data: ClockInstance) => {
-		console.log(data);
+		console.debug("update clock", data);
 		const old = await clocksPromise;
 		old[data.id.toString()] = data;
 		clocksPromise = Promise.resolve(old);
@@ -20,7 +20,7 @@
 		async (
 			data: Omit<Omit<Omit<ClockInstance, "segments">, "name">, "value">
 		) => {
-			console.log(data);
+			console.log("delete", data);
 			const old = await clocksPromise;
 			old[data.id.toString()] = undefined;
 			clocksPromise = Promise.resolve(old);
@@ -40,9 +40,7 @@
 	let edit = window.location.hash == "#edit";
 	window.onhashchange = function () {
 		edit = window.location.hash == "#edit";
-		console.log(window.location.hash);
 	};
-	console.log(window.location.hash);
 
 	let clocksPromise = getCloks();
 </script>
