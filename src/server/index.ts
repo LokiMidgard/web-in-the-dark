@@ -2,6 +2,7 @@
 import * as express from "express";
 const path = require('path')
 const { Pool } = require('pg');
+import type { QueryResult } from 'pg';
 
 
 const PORT = process.env.PORT || 5000
@@ -13,6 +14,7 @@ const pool = new Pool({
     rejectUnauthorized: false
   }
 });
+
 
 
 const app = express();
@@ -35,7 +37,8 @@ app.use(express.static(path.join(__dirname, '../public')))
     try {
       const newEntry = req.body;
       const client = await pool.connect();
-      const result = await new Promise<number>((resolve, reject) => client.query('insert into clocks (name, segments, value) values($1, $2, $3) RETURNING id;', [newEntry.name, newEntry.segments, newEntry.value],
+
+      const result = await new Promise<QueryResult<any>>((resolve, reject) => client.query('insert into clocks (name, segments, value) values($1, $2, $3) RETURNING id;', [newEntry.name, makeInt(newEntry.segments), makeInt(newEntry.value)],
         (err, result) => {
           if (err)
             reject(err);
@@ -52,23 +55,25 @@ app.use(express.static(path.join(__dirname, '../public')))
   }).patch('/clock', async (req, res) => {
     try {
       const newEntry = req.body;
-      const client = await pool.connect();
       if (newEntry.id) {
-
-        const result = await new Promise((resolve, reject) => client.query('update clocks set name = $1, segments = $2, value = $3where id = $4', [newEntry.name, newEntry.segments, newEntry.value, newEntry.id],
-          (err, result) => {
-            if (err)
-              reject(err);
-            else
-              resolve(result);
-          }));
+        const client = await pool.connect();
+        try {
+          const result = await new Promise((resolve, reject) => client.query('update clocks set name = $1, segments = $2, value = $3where id = $4', [newEntry.name, makeInt(newEntry.segments), makeInt(newEntry.value), makeInt(newEntry.id)],
+            (err, result) => {
+              if (err)
+                reject(err);
+              else
+                resolve(result);
+            }));
+        } finally {
+          client.release();
+        }
         res.status(200).send({ id: newEntry.id });
-        io.sockets.emit('update_clock', { id: newEntry.id, segments: newEntry.segments, name: newEntry.name, value: newEntry.value });
+        io.sockets.emit('update_clock', { id: makeInt(newEntry.id), segments: makeInt(newEntry.segments), name: newEntry.name, value: makeInt(newEntry.value) });
 
       } else {
         res.status(500).send("ERROR no id");
       }
-      client.release();
     } catch (err) {
       console.error(err);
       res.status(500).send("Error " + err);
@@ -76,23 +81,24 @@ app.use(express.static(path.join(__dirname, '../public')))
   }).delete('/clock', async (req, res) => {
     try {
       const newEntry = req.body;
-      const client = await pool.connect();
       if (newEntry.id) {
-
-        const result = await new Promise((resolve, reject) => client.query('delete from clocks where id = $1', [newEntry.id],
-          (err, result) => {
-            if (err)
-              reject(err);
-            else
-              resolve(result);
-          }));
+        const client = await pool.connect();
+        try {
+          const result = await new Promise((resolve, reject) => client.query('delete from clocks where id = $1', [makeInt(newEntry.id)],
+            (err, result) => {
+              if (err)
+                reject(err);
+              else
+                resolve(result);
+            }));
+        } finally {
+          client.release();
+        }
         res.status(200).send({ id: newEntry.id });
         io.sockets.emit('delete_clock', { id: newEntry.id });
-
       } else {
         res.status(500).send("ERROR no id");
       }
-      client.release();
     } catch (err) {
       console.error(err);
       res.status(500).send("Error " + err);
@@ -101,15 +107,26 @@ app.use(express.static(path.join(__dirname, '../public')))
   .get('/clock', async (req, res) => {
     try {
       const client = await pool.connect();
-      const result = await client.query('SELECT * FROM clocks');
+      let result: { rows: [] };
+      try {
+        result = await client.query('SELECT * FROM clocks');
+      } finally {
+        client.release();
+      }
       res.send((result) ? result.rows : []);
-      client.release();
     } catch (err) {
       console.error(err);
       res.status(500).send("Error " + err);
     }
   });
 
+function makeInt(value: any) {
+  if (typeof value === "number") {
+    return value;
+  } if (typeof value === "string") {
+    return parseInt(value);
+  }
+}
 
 // start our simple server up on localhost:3000
 const server = http
