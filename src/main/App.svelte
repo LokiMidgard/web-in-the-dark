@@ -9,13 +9,25 @@
 	const socket = ioclient();
 
 	socket.on("update_clock", async (data: ClockInstance) => {
+		console.log(data);
 		const old = await clocksPromise;
 		old[data.id.toString()] = data;
 		clocksPromise = Promise.resolve(old);
 	});
 
-	export let name: string;
+	socket.on(
+		"delete_clock",
+		async (
+			data: Omit<Omit<Omit<ClockInstance, "segments">, "name">, "value">
+		) => {
+			console.log(data);
+			const old = await clocksPromise;
+			old[data.id.toString()] = undefined;
+			clocksPromise = Promise.resolve(old);
+		}
+	);
 
+	export let name: string;
 
 	function newClock() {
 		createClock({
@@ -24,6 +36,13 @@
 			value: 1,
 		});
 	}
+
+	let edit = window.location.hash == "#edit";
+	window.onhashchange = function () {
+		edit = window.location.hash == "#edit";
+		console.log(window.location.hash);
+	};
+	console.log(window.location.hash);
 
 	let clocksPromise = getCloks();
 </script>
@@ -34,21 +53,27 @@
 		Visit the <a href="https://svelte.dev/tutorial">Svelte tutorial</a> to learn
 		how to build Svelte apps.
 	</p>
-
-	<button on:click={newClock}>+</button>
-
-	{#await clocksPromise}
-		<p>loading...</p>
-	{:then clocks}
-		{#each itterate(clocks) as [key, clock]}
-			<Clock {clock} />
-		{/each}
-	{:catch e}
-		<p>{e}</p>
-	{/await}
+	{#if edit}
+		<button on:click={newClock}>Add Clock</button>
+	{/if}
+	<div class="clocks">
+		{#await clocksPromise}
+			<p>loading...</p>
+		{:then clocks}
+			{#each itterate(clocks) as [key, clock]}
+				<Clock {clock} editable={edit} />
+			{/each}
+		{:catch e}
+			<p>{e}</p>
+		{/await}
+	</div>
 </main>
 
 <style>
+	.clocks {
+		display: flex;
+		flex-wrap: wrap;
+	}
 	main {
 		text-align: center;
 		padding: 1em;

@@ -31,6 +31,17 @@
         console.debug(response.status);
     }
 
+    export async function deleteClock(clock: ClockInstance): Promise<void> {
+        const response = await fetch("/clock", {
+            method: "DELETE",
+            body: JSON.stringify(clock),
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+        console.debug(response.status);
+    }
+
     export async function createClock(
         clock: Omit<ClockInstance, "id">
     ): Promise<number> {
@@ -49,7 +60,18 @@
 
 <script lang="ts">
     export let clock: ClockInstance;
-    export let editable: boolean = true;
+    export let editable: boolean = false;
+
+    let name = clock.name;
+    let nameHasChanges: boolean;
+    $: nameHasChanges = name != clock.name;
+
+    function updateText() {
+        if (clock.name != name) {
+            clock.name = name;
+            updateClock(clock);
+        }
+    }
 
     function segments(clock: number): number[] {
         const result: number[] = [];
@@ -60,15 +82,31 @@
         return result;
     }
     function change(change: number) {
+        const old = clock.value;
         clock.value = Math.max(
             0,
             Math.min(clock.segments, clock.value + change)
         );
-        updateClock(clock);
+        if (old != clock.value) {
+            updateClock(clock);
+        }
+    }
+    function changeSegments(change: number) {
+        const oldSegment = clock.segments;
+        const oldValue = clock.value;
+        clock.segments = Math.max(2, clock.segments + change);
+        clock.value = Math.max(0, Math.min(clock.segments, clock.value));
+
+        if (oldSegment != clock.segments || oldValue != clock.value) {
+            updateClock(clock);
+        }
     }
 </script>
 
 <div class="border">
+    {#if editable}
+        <button on:click={() => deleteClock(clock)}>Delete</button>
+    {/if}
     <div class="clock">
         <div
             class="pie"
@@ -81,10 +119,27 @@
             />
         {/each}
     </div>
-    <h1>{clock.name}</h1>
+
     {#if editable}
-        <button on:click={() => change(1)}>+</button>
-        <button on:click={() => change(-1)}>-</button>
+        <input type="text" bind:value={name} />
+        {#if nameHasChanges}
+            <button on:click={updateText}>Update Text</button>
+        {/if}
+    {:else}
+        <h1>{clock.name}</h1>
+    {/if}
+
+    {#if editable}
+        <h2>Value</h2>
+        <div>
+            <button on:click={() => change(1)}>+</button>
+            <button on:click={() => change(-1)}>-</button>
+        </div>
+        <h2>Segments</h2>
+        <div>
+            <button on:click={() => changeSegments(1)}>+</button>
+            <button on:click={() => changeSegments(-1)}>-</button>
+        </div>
     {/if}
 </div>
 

@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 5000
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.SSL ? false :  {
+  ssl: process.env.SSL ? false : {
     rejectUnauthorized: false
   }
 });
@@ -35,7 +35,7 @@ app.use(express.static(path.join(__dirname, '../public')))
     try {
       const newEntry = req.body;
       const client = await pool.connect();
-      const result = await new Promise((resolve, reject) => client.query('insert into clocks (name, segments, value) values($1, $2, $3) RETURNING id', [newEntry.name, newEntry.segments, newEntry.value],
+      const result = await new Promise<number>((resolve, reject) => client.query('insert into clocks (name, segments, value) values($1, $2, $3) RETURNING id;', [newEntry.name, newEntry.segments, newEntry.value],
         (err, result) => {
           if (err)
             reject(err);
@@ -44,7 +44,7 @@ app.use(express.static(path.join(__dirname, '../public')))
         }));
       res.send(result);
       client.release();
-      io.sockets.emit('update_clock', newEntry);
+      io.sockets.emit('update_clock', { id: result, segments: newEntry.segments, name: newEntry.name, value: newEntry.value });
     } catch (err) {
       console.error(err);
       res.status(500).send("Error " + err);
@@ -54,7 +54,6 @@ app.use(express.static(path.join(__dirname, '../public')))
       const newEntry = req.body;
       const client = await pool.connect();
       if (newEntry.id) {
-        console.log(newEntry)
 
         const result = await new Promise((resolve, reject) => client.query('update clocks set name = $1, segments = $2, value = $3where id = $4', [newEntry.name, newEntry.segments, newEntry.value, newEntry.id],
           (err, result) => {
@@ -65,6 +64,30 @@ app.use(express.static(path.join(__dirname, '../public')))
           }));
         res.status(200).send({ id: newEntry.id });
         io.sockets.emit('update_clock', { id: newEntry.id, segments: newEntry.segments, name: newEntry.name, value: newEntry.value });
+
+      } else {
+        res.status(500).send("ERROR no id");
+      }
+      client.release();
+    } catch (err) {
+      console.error(err);
+      res.status(500).send("Error " + err);
+    }
+  }).delete('/clock', async (req, res) => {
+    try {
+      const newEntry = req.body;
+      const client = await pool.connect();
+      if (newEntry.id) {
+
+        const result = await new Promise((resolve, reject) => client.query('delete from clocks where id = $1', [newEntry.id],
+          (err, result) => {
+            if (err)
+              reject(err);
+            else
+              resolve(result);
+          }));
+        res.status(200).send({ id: newEntry.id });
+        io.sockets.emit('delete_clock', { id: newEntry.id });
 
       } else {
         res.status(500).send("ERROR no id");
