@@ -147,11 +147,14 @@
         font-size: 1.4em;
     }
     .border {
-        border: 1px solid black;
+        border: 2px solid black;
+        border-radius: 2px;
         width: min-content;
         padding: 8px;
         height: min-content;
         margin: 12px;
+        color: aliceblue;
+        background: #555;
     }
     .marking {
         content: "";

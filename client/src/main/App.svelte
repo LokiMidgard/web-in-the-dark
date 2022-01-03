@@ -27,8 +27,6 @@
 		}
 	);
 
-	export let name: string;
-
 	function newClock() {
 		createClock({
 			name: "Test",
@@ -46,11 +44,8 @@
 </script>
 
 <main>
-	<h1>Hello {name}!</h1>
-	<p>
-		Visit the <a href="https://svelte.dev/tutorial">Svelte tutorial</a> to learn
-		how to build Svelte apps.
-	</p>
+	<h1>Web in the Dark</h1>
+	<p>The crews clocks...</p>
 	{#if edit}
 		<button on:click={newClock}>Add Clock</button>
 	{/if}
