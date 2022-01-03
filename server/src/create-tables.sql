@@ -18,14 +18,13 @@ CREATE TABLE IF NOT EXISTS public."Groups"
     CONSTRAINT "Groups_pkey" PRIMARY KEY (id)
 );
 
-CREATE TABLE IF NOT EXISTS public.authentication_keys
+CREATE TABLE IF NOT EXISTS public.local_login
 (
-    id serial NOT NULL,
-    key bytea NOT NULL,
-    created date NOT NULL,
-    comment text COLLATE pg_catalog."default" NOT NULL,
-    "user" uuid NOT NULL,
-    CONSTRAINT authentication_keys_pkey PRIMARY KEY (id)
+    login text NOT NULL,
+    created timestamp with time zone NOT NULL DEFAULT now(),
+    password text COLLATE pg_catalog."default" NOT NULL,
+    user_id uuid NOT NULL,
+    CONSTRAINT authentication_keys_pkey PRIMARY KEY (user_id)
 );
 
 CREATE TABLE IF NOT EXISTS public.background_type
@@ -166,7 +165,7 @@ CREATE TABLE IF NOT EXISTS public.heritage_type
 CREATE TABLE IF NOT EXISTS public.invites
 (
     id uuid NOT NULL DEFAULT uuid_generate_v1(),
-    valid_until date NOT NULL,
+    valid_until timestamp with time zone NOT NULL,
     granted_by uuid NOT NULL,
     CONSTRAINT invites_pkey PRIMARY KEY (id)
 );
@@ -199,10 +198,9 @@ CREATE TABLE IF NOT EXISTS public.special_abilities_character
 
 CREATE TABLE IF NOT EXISTS public.users
 (
-    id uuid NOT NULL,
+    id uuid NOT NULL DEFAULT uuid_generate_v1(),
     name text COLLATE pg_catalog."default" NOT NULL,
     granted_by uuid,
-    password text,
     CONSTRAINT user_pkey PRIMARY KEY (id)
 );
 
@@ -337,8 +335,8 @@ ALTER TABLE IF EXISTS public."Groups"
     NOT VALID;
 
 
-ALTER TABLE IF EXISTS public.authentication_keys
-    ADD CONSTRAINT user_fk FOREIGN KEY ("user")
+ALTER TABLE IF EXISTS public.local_login
+    ADD CONSTRAINT user_fk FOREIGN KEY (user_id)
     REFERENCES public.users (id) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE CASCADE

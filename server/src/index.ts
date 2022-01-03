@@ -64,7 +64,6 @@ async function generateUser(data: common.RegsiterAccount): Promise<db_user> {
   const userId: string = randomUUID();
   const name = data.name;
 
-  console.log(data);
   if (common.isLogin(data.authentication)) {
     const password = data.authentication.password
     const login = data.authentication.login
