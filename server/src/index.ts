@@ -1,36 +1,9 @@
-// import express from 'express';
 
-// // Initialize the express engine
-// const app: express.Application = express();
-
-// // Take a port 3000 for running server.
-// const port: number = 3000;
-
-// // Handling '/' Request
-// app.get('/', (_req, _res) => {
-//     _res.send("TypeScript Wiht Expresss");
-// });
-
-// // Server setup
-// app.listen(port, () => {
-//     console.log(`TypeScript with Express
-//          http://localhost:${port}/`);
-// });
-
-
-
-
-
-
-
-
-
-// src/server.ts
 import express from 'express';
-const path = require('path')
+import path from 'path';
 import { QueryResult, Pool } from 'pg';
-
-
+import socket from 'socket.io';
+import http from "http";
 const PORT = process.env.PORT || 5000
 
 
@@ -46,15 +19,8 @@ const pool = new Pool({
 const app = express();
 app.set("port", PORT);
 
-var http = require("http").Server(app);
-
-
-const io = require('socket.io')(http);
-// io.on('connection', (socket: Socket) => {
-//   socket.on('my other event', (data) => {
-//     console.log('I got data. will running another function', data.count);
-//   });
-// });
+var httpServer = new http.Server(app);
+const io = new socket.Server(httpServer);
 
 
 app.use(express.static(path.join(__dirname, '../../client/public')))
@@ -156,6 +122,6 @@ function makeInt(value: any) {
 }
 
 // start our simple server up on localhost:3000
-const server = http
+const server = httpServer
   .listen(PORT, () => console.log(`Server started on http://localhost:${PORT}`));
 
