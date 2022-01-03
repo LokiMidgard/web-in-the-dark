@@ -4,9 +4,23 @@
 		createClock,
 		getCloks,
 	} from "./Clock.svelte";
-	import { itterate } from "./helper";
+	import { itterate, sendServer } from "./helper";
 	import ioclient from "socket.io-client";
+	import { onMount } from "svelte";
+	import type { isAuthenticated } from "blade-common";
 	const socket = ioclient();
+
+	let isAuthenticated: boolean | undefined;
+	let userName: string | undefined;
+
+	onMount(async () => {
+		const result = await sendServer<void, isAuthenticated>(
+			"/auth/isAuthenticated",
+			"get"
+		);
+		isAuthenticated = result.isAuthenticated;
+		userName = result.userName;
+	});
 
 	socket.on("update_clock", async (data: ClockInstance) => {
 		console.debug("update clock", data);
@@ -35,10 +49,8 @@
 		});
 	}
 
-	let edit = window.location.hash == "#edit";
-	window.onhashchange = function () {
-		edit = window.location.hash == "#edit";
-	};
+	let edit: boolean;
+	$: edit = isAuthenticated;
 
 	let clocksPromise = getCloks();
 </script>
@@ -46,7 +58,14 @@
 <main>
 	<h1>Web in the Dark</h1>
 	<p>The crews clocks...</p>
-	<p><a href="/invite.html">Invete</a> new scundrels.</p>
+	{#if userName}
+		<p>
+			<a href="/invite.html">Invete</a> new scundrels. Or
+			<a href="/auth/logout">logout</a>.
+		</p>
+	{:else}
+		<p><a href="/login.html">Login</a> for more options.</p>
+	{/if}
 	{#if edit}
 		<button on:click={newClock}>Add Clock</button>
 	{/if}

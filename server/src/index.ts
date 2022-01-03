@@ -154,7 +154,7 @@ app.use(express.static(path.join(__dirname, '../../client/public')))
   .use(passport.initialize())
   .use(passport.session())
   .use(flash())
-  .put('/clock', async (req, res) => {
+  .put('/clock', Authenticated, async (req, res) => {
     try {
       const newEntry = req.body;
       const client = await pool.connect();
@@ -176,7 +176,7 @@ app.use(express.static(path.join(__dirname, '../../client/public')))
       console.error(err);
       res.status(500).send("Error " + err);
     }
-  }).patch('/clock', async (req, res) => {
+  }).patch('/clock', Authenticated, async (req, res) => {
     try {
       const newEntry = req.body;
       if (newEntry.id) {
@@ -202,7 +202,7 @@ app.use(express.static(path.join(__dirname, '../../client/public')))
       console.error(err);
       res.status(500).send("Error " + err);
     }
-  }).delete('/clock', async (req, res) => {
+  }).delete('/clock', Authenticated, async (req, res) => {
     try {
       const newEntry = req.body;
       if (newEntry.id) {
@@ -292,6 +292,10 @@ app.use(express.static(path.join(__dirname, '../../client/public')))
   .post('/auth/password/login', NotAuthenticated, passport.authenticate('local'), (req, res) => {
     res.status(200).send("OK")
   })
+  .post('/auth/logout', Authenticated, (req, res) => {
+    req.logOut();
+    res.status(200).send("OK")
+  })
   .get('/api/invite', Authenticated, async (req, res, next) => {
     try {
       try {
@@ -326,7 +330,32 @@ app.use(express.static(path.join(__dirname, '../../client/public')))
   })
   .get('/auth/isAuthenticated', async (req, res, next) => {
     try {
-      const data: common.isAuthenticated = { isAuthenticated: req.user ? true : false };
+
+      const isAuthenticated = req.user ? true : false;
+      let name = undefined;
+      if (isAuthenticated) {
+
+        const client = await pool.connect();
+        try {
+          var today = new Date();
+          var tomorrow = new Date();
+          tomorrow.setDate(today.getDate() + 1);
+          const query = await client.query<db_user>('select * from users where id = $1;', [req.user?.id]);
+          if (query.rowCount != 1) {
+            res.status(500).send(`Wrong number of rows ${query.rowCount}`);
+            return
+          }
+          const result = query.rows[0];
+          name = result.name;
+        } finally {
+          client.release();
+        }
+      }
+
+      const data: common.isAuthenticated = {
+        isAuthenticated: req.user ? true : false,
+        userName: name
+      };
       res.status(200).send(data);
 
     } catch (err) {

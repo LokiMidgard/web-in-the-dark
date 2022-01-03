@@ -14,7 +14,7 @@ body {
 }
 
 a {
-	color: rgb(0,100,200);
+	color: hsl(210, 100%, 79%);
 	text-decoration: none;
 }
 

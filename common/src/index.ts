@@ -20,7 +20,8 @@ export interface CheckLogin {
 }
 
 export interface isAuthenticated {
-    isAuthenticated: boolean
+    isAuthenticated: boolean;
+    userName: string | undefined;
 }
 
 export function isLogin(obj: any): obj is Login {
