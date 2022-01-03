@@ -46,6 +46,7 @@
 <main>
 	<h1>Web in the Dark</h1>
 	<p>The crews clocks...</p>
+	<p><a href="/invite.html">Invete</a> new scundrels.</p>
 	{#if edit}
 		<button on:click={newClock}>Add Clock</button>
 	{/if}

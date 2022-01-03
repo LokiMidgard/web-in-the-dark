@@ -14,11 +14,9 @@
     }
   },
   "compilerOptions": {
-    "composite": true
-  },
-  "references": [
-    {
-      "path": "./../common"
-    }
-  ]
+    "declaration": true,
+    "composite": true,
+    "rootDir": "src",
+    "outDir": "lib"
+  }
 }

@@ -91,6 +91,6 @@ const COMMON = function (appName, index) {
 
 
 
-const apps = ['main'];
+const apps = ['main','invite','login'];
 
 export default apps.map(COMMON);

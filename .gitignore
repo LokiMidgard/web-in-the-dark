@@ -5,3 +5,6 @@ client/public/build/
 .env
 dist/*
 */node_modules/
+*/.rollup.cache/
+common/lib/
+tsconfig.tsbuildinfo

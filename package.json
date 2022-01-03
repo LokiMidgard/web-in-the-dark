@@ -6,7 +6,11 @@
     "node": "16.x",
     "npm": "8.x"
   },
+  "scripts": {
+    "local": "npm i && heroku local"
+  },
   "workspaces": [
+    "common",
     "server",
     "client"
   ]

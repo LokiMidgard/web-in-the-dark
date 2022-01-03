@@ -1,5 +1,5 @@
 
-export interface Dictionary<T>  {
+export interface Dictionary<T> {
     [index: string]: T | undefined;
 }
 
@@ -52,4 +52,19 @@ export function delay(ms: number): Promise<void> {
             resolve();
         }, ms);
     })
+}
+
+export async function sendServer<T, TOut>(url: string, method: "post" | "patch" | "get", data?: T) {
+    const response = await fetch(url, {
+        method: method,
+        body: data ? JSON.stringify(data) : undefined,
+        headers: data ? {
+            "Content-Type": "application/json",
+        } : undefined,
+    });
+    if (response.ok)
+        return (await response.json()) as TOut;
+    console.error(url, response.statusText)
+    throw response.body;
+
 }

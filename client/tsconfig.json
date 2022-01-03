@@ -8,5 +8,11 @@
     "__sapper__/*",
     "public/*",
     "src/server/*"
+  ],
+
+  "references": [
+    {
+      "path": "./../common"
+    }
   ]
 }
