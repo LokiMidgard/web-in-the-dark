@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "build": "rollup -c",
+    "postinstall": "rollup -c",
     "dev": "rollup -c -w",
     "startDev": "sirv public --no-clear",
     "start": "node dist/index.js",
