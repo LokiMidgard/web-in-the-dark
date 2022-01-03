@@ -1,8 +1,34 @@
+// import express from 'express';
+
+// // Initialize the express engine
+// const app: express.Application = express();
+
+// // Take a port 3000 for running server.
+// const port: number = 3000;
+
+// // Handling '/' Request
+// app.get('/', (_req, _res) => {
+//     _res.send("TypeScript Wiht Expresss");
+// });
+
+// // Server setup
+// app.listen(port, () => {
+//     console.log(`TypeScript with Express
+//          http://localhost:${port}/`);
+// });
+
+
+
+
+
+
+
+
+
 // src/server.ts
-import * as express from "express";
+import express from 'express';
 const path = require('path')
-const { Pool } = require('pg');
-import type { QueryResult } from 'pg';
+import { QueryResult, Pool } from 'pg';
 
 
 const PORT = process.env.PORT || 5000
@@ -31,7 +57,7 @@ const io = require('socket.io')(http);
 // });
 
 
-app.use(express.static(path.join(__dirname, '../public')))
+app.use(express.static(path.join(__dirname, '../../client/public')))
   .use(express.json())
   .put('/clock', async (req, res) => {
     try {
@@ -107,7 +133,7 @@ app.use(express.static(path.join(__dirname, '../public')))
   .get('/clock', async (req, res) => {
     try {
       const client = await pool.connect();
-      let result: { rows: [] };
+      let result: QueryResult<any>;
       try {
         result = await client.query('SELECT * FROM clocks');
       } finally {
