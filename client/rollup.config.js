@@ -41,7 +41,7 @@ const COMMON = function (appName, index) {
 		sourcemap: true,
 		format: 'iife',
 		name: 'app',
-		file: `../public/build/${appName}/bundle.js`
+		file: `public/build/${appName}/bundle.js`
 	},
 	plugins: [
 		svelte({
@@ -77,7 +77,7 @@ const COMMON = function (appName, index) {
 
 		// Watch the `public` directory and refresh the
 		// browser on changes when not in production
-		!production && livereload('../public'),
+		!production && livereload('public'),
 
 		// If we're building for production (npm run build
 		// instead of npm run dev), minify
