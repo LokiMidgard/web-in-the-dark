@@ -1,6 +1,6 @@
 export interface RegsiterAccount<T extends Login | WebAuthN = Login | WebAuthN> {
     name: string,
-    invite: string,
+    invite: string | undefined,
     authentication: T
 }
 

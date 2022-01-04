@@ -16,19 +16,68 @@ import { randomUUID } from 'crypto';
 const PORT = process.env.PORT || 5000
 
 
+declare global {
+  namespace NodeJS {
+    interface ProcessEnv {
+      SESSION_SECRET_KEY: string
+      URL: string
+      HOST: string
+      SSL: "true" | "false" | undefined
+      DEFAULT_USER: string | undefined
+      DEFAULT_PASSWORD: string | undefined
+    }
 
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.SSL ? false : {
-    rejectUnauthorized: false
+
   }
+}
+
+
+export const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.SSL == 'false'
+    ? false :
+    process.env.SSL == 'true'
+      ? true
+      : {
+        rejectUnauthorized: false
+      }
 });
 
 if (!process.env.SESSION_SECRET_KEY) {
   throw 'Define env SESSION_SECRET_KEY'
 }
 
+
+if (process.env.DEFAULT_USER && process.env.DEFAULT_PASSWORD) {
+  const defaultUser = process.env.DEFAULT_USER;
+  const defaultPassword = process.env.DEFAULT_PASSWORD;
+  (async function () {
+
+    const client = await pool.connect();
+    try {
+      console.info('Generating default user', defaultUser);
+      const userQuery = await client.query<db_local_login>('select * from local_login where login = $1;', [process.env.DEFAULT_USER]);
+      if (userQuery.rowCount == 0) {
+        // no default user create one:
+        await generateUser({
+          name: defaultUser,
+          invite: undefined,
+          authentication: {
+            login: defaultUser,
+            password: defaultPassword
+          }
+        },
+          {
+            ignoreInvite: true
+          });
+
+      }
+    } finally {
+      client.release();
+    }
+  })();
+}
 
 const app = express();
 app.set("port", PORT);
@@ -45,11 +94,14 @@ passport.deserializeUser((user, done) => {
 
 async function getInviter(data: common.RegsiterAccount) {
 
+  if (!data.invite) {
+    return undefined;
+  }
   const client = await pool.connect();
   try {
     const userQuery = await client.query<db_invite>('select * from invites where id = $1;', [data.invite]);
     if (userQuery.rowCount == 0) {
-      throw 'No invite found'
+      return undefined;
     }
     return userQuery.rows[0];
   } finally {
@@ -58,9 +110,11 @@ async function getInviter(data: common.RegsiterAccount) {
 
 }
 
-async function generateUser(data: common.RegsiterAccount): Promise<db_user> {
 
+async function generateUser(data: common.RegsiterAccount, options?: { ignoreInvite: boolean }): Promise<db_user> {
   const inviter = await getInviter(data);
+  if (!inviter && !(options?.ignoreInvite ?? false))
+    throw 'Ivite coulde not be found'
   const userId: string = randomUUID();
   const name = data.name;
 
@@ -82,7 +136,7 @@ async function generateUser(data: common.RegsiterAccount): Promise<db_user> {
       try {
 
         await client.query('begin;');
-        userQuery = await client.query('insert into users (id, name, granted_by) values($1, $2, $3);', [userId, name, inviter.granted_by]);
+        userQuery = await client.query('insert into users (id, name, granted_by) values($1, $2, $3);', [userId, name, inviter?.granted_by ?? null]);
         await client.query('insert into local_login (user_id, login, password) values($1, $2, $3);', [userId, login, hash]);
         if (data.invite)
           await client.query('delete from invites where id = $1;', [data.invite]);
