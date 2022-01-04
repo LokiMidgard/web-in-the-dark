@@ -292,9 +292,9 @@ app.use(express.static(path.join(__dirname, '../../client/public')))
   .post('/auth/password/login', NotAuthenticated, passport.authenticate('local'), (req, res) => {
     res.status(200).send("OK")
   })
-  .post('/auth/logout', Authenticated, (req, res) => {
+  .get('/auth/logout', Authenticated, (req, res) => {
     req.logOut();
-    res.status(200).send("OK")
+    res.redirect('/')
   })
   .get('/api/invite', Authenticated, async (req, res, next) => {
     try {
