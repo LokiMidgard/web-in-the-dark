@@ -23,7 +23,7 @@ a:hover {
 }
 
 a:visited {
-	color: rgb(0,80,160);
+	color: hsl(230, 100%, 79%);
 }
 
 label {
