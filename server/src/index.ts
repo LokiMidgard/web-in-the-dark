@@ -366,7 +366,7 @@ app.use(express.static(path.join(__dirname, '../../client/public')))
           }
           const result = query.rows[0];
           res.status(200).send({
-            link: `${process.env.URL}invite#${result.id}`,
+            link: `${process.env.URL}invite.html#${result.id}`,
             validUntill: result.valid_until
           });
         } finally {
