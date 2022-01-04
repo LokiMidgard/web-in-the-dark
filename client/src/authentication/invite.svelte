@@ -55,8 +55,9 @@
             loding = false;
         }
     }
-
-    async function register() {
+    let error: string | undefined;
+    async function registerPassword() {
+        error = undefined;
         const data: common.RegsiterAccount<Login> = {
             name: name,
             invite: window.location.hash.substring(1),
@@ -73,6 +74,11 @@
             },
         });
         console.debug("Status patch", response.status);
+        if (response.ok) {
+            window.location.assign("/");
+        } else {
+            error = await response.text();
+        }
     }
     let inviteLink: string | undefined;
     let validUntill: string | undefined;
@@ -86,6 +92,10 @@
         validUntill = responst.validUntill;
     }
 </script>
+
+{#if error}
+    <p class="warn">{error}</p>
+{/if}
 
 {#if isAuthenticated === true}
     <button on:click={generateInvite}>Generate Invite</button>
@@ -147,7 +157,7 @@
                         !name ||
                         !password ||
                         !login}
-                    on:click={register}>Register</button
+                    on:click={registerPassword}>Register</button
                 >
                 {#if loding}
                     <Loading lable="Checking name" />
@@ -166,6 +176,9 @@
 {/if}
 
 <style lang="scss">
+    .warn{
+        border: 2px red solid;
+    }
     .notAvailab {
         border: 1px red solid;
         background-color: lightcoral;

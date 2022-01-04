@@ -162,7 +162,6 @@ async function generateUser(data: common.RegsiterAccount, options?: { ignoreInvi
 }
 
 passport.use('local', new Strategy({ usernameField: 'login' }, async (userid, password, doen) => {
-  console.log("called stretegy with", userid, password, doen)
   const client = await pool.connect();
   try {
     const query = await client.query<db_local_login>('select * from local_login where login = $1;', [userid]);
