@@ -135,9 +135,10 @@ function configure([string]$app, [string]$defaultUser, [string]$defaultPassword)
     $data = get-appData $app;
  
     $uri = [System.Uri]::new($data.url);
-    & heroku config:set URL=$($url) --remote $app
+    & heroku config:set URL=$($data.url) --remote $app
     & heroku config:set HOST=$($uri.Host) --remote $app
     & heroku config:set SESSION_SECRET_KEY=$([System.Convert]::ToBase64String( [System.Security.Cryptography.RandomNumberGenerator]::GetBytes(64) )) --remote $app
+    & heroku config:set JWT_SECRET=$([System.Convert]::ToBase64String( [System.Security.Cryptography.RandomNumberGenerator]::GetBytes(64) )) --remote $app
 
     if (($null -ne $defaultUser) -and ($null -ne $defaultPassword)) {
 

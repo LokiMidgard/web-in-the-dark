@@ -17,6 +17,8 @@
     "declaration": true,
     "composite": true,
     "rootDir": "src",
-    "outDir": "lib"
+    "outDir": "lib",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   }
 }

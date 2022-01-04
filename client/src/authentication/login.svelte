@@ -1,5 +1,7 @@
 <script lang="ts">
     import type common from "blade-common";
+    import { sendServer } from "../main/helper";
+    import * as fido from "./fido";
     let name: string | undefined;
     let password: string | undefined;
     let login: string | undefined;
@@ -21,12 +23,35 @@
         }
         console.debug("Status patch", response.status);
     }
+
+    async function webauthLogin() {
+        try {
+            const registration = await sendServer<
+                void,
+                { challenge: string; id: string }
+            >("/auth/webauth/challenge", "get");
+
+            await fido.getAssertion(registration.challenge);
+            window.location.assign("/");
+        } catch (error) {
+            console.error(error);
+        }
+    }
 </script>
 
 <form>
     <label for="login">Login</label>
-    <input id="login" bind:value={login} />
+    <input autocomplete="username" id="login" bind:value={login} />
     <label for="password">Password</label>
-    <input id="password" type="password" bind:value={password} />
+    <input
+        autocomplete="current-password"
+        id="password"
+        type="password"
+        bind:value={password}
+    />
+    <button disabled={!(login && password)} on:click={passwordLogin}
+        >login</button
+    >
 </form>
-<button disabled={!(login && password)} on:click={passwordLogin}>login</button>
+
+<button on:click={webauthLogin}>Login With Device</button>

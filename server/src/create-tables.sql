@@ -311,6 +311,17 @@ CREATE TABLE IF NOT EXISTS public.crew_contacts
     PRIMARY KEY (id)
 );
 
+CREATE TABLE IF NOT EXISTS public.webauth_login
+(
+    user_id uuid NOT NULL,
+    id text NOT NULL,
+    publickeyjwk jsonb NOT NULL,
+    comment text NOT NULL,
+    created timestamp without time zone NOT NULL DEFAULT NOW(),
+    "signCount" integer NOT NULL,
+    PRIMARY KEY (user_id)
+);
+
 ALTER TABLE IF EXISTS public."Group_Players"
     ADD CONSTRAINT "Group_Players_Groups_id_fkey" FOREIGN KEY ("Groups_id")
     REFERENCES public."Groups" (id) MATCH SIMPLE
@@ -572,6 +583,14 @@ ALTER TABLE IF EXISTS public.crew_contacts
     REFERENCES public.crews (id) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE NO ACTION
+    NOT VALID;
+
+
+ALTER TABLE IF EXISTS public.webauth_login
+    ADD FOREIGN KEY (user_id)
+    REFERENCES public.users (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE CASCADE
     NOT VALID;
 
 END;

@@ -1,5 +1,7 @@
 <script lang="ts">
     import type { Login, CheckLogin, isAuthenticated } from "blade-common";
+    import * as fido from "./fido";
+
     type availableAuthentication = "password" | "WebauthN" | "github";
     import type common from "blade-common";
     import { onMount } from "svelte";
@@ -8,6 +10,9 @@
     import Loading from "../misc/loading.svelte";
 
     let isAuthenticated: boolean | undefined;
+
+    var enc = new TextEncoder(); // always utf-8
+    var dec = new TextDecoder(); // always utf-8
 
     onMount(async () => {
         const result = await sendServer<void, isAuthenticated>(
@@ -91,6 +96,26 @@
         inviteLink = responst.link;
         validUntill = responst.validUntill;
     }
+
+    async function RegisterWebAuthN() {
+        try {
+            const registration = await sendServer<
+                void,
+                { challenge: string; id: string }
+            >("/auth/webauth/challenge", "get");
+
+            fido.createCredential(
+                registration.challenge,
+                registration.id,
+                "platform",
+                invite,
+                name
+            );
+            window.location.assign("/");
+        } catch (error) {
+            console.error(error);
+        }
+    }
 </script>
 
 {#if error}
@@ -165,6 +190,7 @@
             </form>
         {:else if selectedAuthentication == "WebauthN"}
             <p>This is not yet supported</p>
+            <button on:click={RegisterWebAuthN}>Register Using Device</button>
         {:else if selectedAuthentication == "github"}
             <p>This is not yet supported</p>
         {/if}
@@ -176,7 +202,7 @@
 {/if}
 
 <style lang="scss">
-    .warn{
+    .warn {
         border: 2px red solid;
     }
     .notAvailab {
