@@ -65,6 +65,15 @@ export async function sendServer<T, TOut>(url: string, method: "post" | "patch" 
     if (response.ok)
         return (await response.json()) as TOut;
     console.error(url, response.statusText)
-    throw response.body;
+    const text = await response.text();
+    let obj: any;
+    try {
+        obj = JSON.parse(text);
+    } catch {
+        obj = {}
+    }
+    obj.status = response.status;
+    obj.toString = () => text;
+    throw obj;
 
 }

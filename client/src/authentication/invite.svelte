@@ -26,7 +26,37 @@
         isAuthenticated = result.isAuthenticated;
     });
     let invite: string | undefined;
+    $: checkInvite(invite);
     invite = location.hash?.substring(1);
+
+    let inviter: string | undefined;
+    let validUntill: Date | undefined;
+
+    async function checkInvite(i: string | undefined) {
+        if (i) {
+            try {
+                error = undefined;
+                const data = await sendServer<
+                    { invite: string },
+                    { granted_by: string; validUntill: string }
+                >("/auth/invite/validate", "post", { invite: i });
+
+                validUntill = new Date(Date.parse(data.validUntill));
+                inviter = data.granted_by;
+            } catch (e) {
+                validUntill = undefined;
+                invite = undefined;
+                error =
+                    e.status == 404
+                        ? "Invite not valid, maybe expired"
+                        : e.toString();
+            }
+        } else {
+            validUntill = undefined;
+            invite = undefined;
+        }
+    }
+
     window.onhashchange = function () {
         invite = location.hash?.substring(1);
     };
@@ -90,15 +120,14 @@
         }
     }
     let inviteLink: string | undefined;
-    let validUntill: string | undefined;
     async function generateInvite() {
         const responst = await sendServer<
             void,
             { link: string; validUntill: string }
-        >("/api/invite", "get");
+        >("/auth/invite", "get");
 
         inviteLink = responst.link;
-        validUntill = responst.validUntill;
+        validUntill = new Date(Date.parse(responst.validUntill));
     }
 
     async function RegisterWebAuthN(attachment: fido.attachment) {
@@ -125,105 +154,106 @@
 {#if error}
     <p class="warn">{error}</p>
 {/if}
-
 {#if isAuthenticated === true}
-    <button on:click={generateInvite}>Generate Invite</button>
-    {#if inviteLink}
-        <div>
-            <textarea readonly>{inviteLink}</textarea>
-            <p>
-                This link is valid untill {new Date(
-                    Date.parse(validUntill)
-                ).toLocaleString()}
-            </p>
-        </div>
-    {/if}
-{:else if isAuthenticated === false}
     {#if invite}
-        <p>You have been invited. Whats your name?</p>
-        <input
-            autocomplete="nickname"
-            bind:value={name}
-            placeholder="Your name..."
-        />
-        <p>Choose a authentication method.</p>
-        <label>
-            <input
-                type="radio"
-                bind:group={selectedAuthentication}
-                value={"password"}
-            />
-            Username & Password
-        </label>
-
-        <label>
-            <input
-                type="radio"
-                bind:group={selectedAuthentication}
-                value={"webauthN-device"}
-            />
-            Device
-        </label>
-        <label>
-            <input
-                type="radio"
-                bind:group={selectedAuthentication}
-                value={"webauthN-key"}
-            />
-            Securety Key
-        </label>
-
-        <label>
-            <input
-                disabled
-                type="radio"
-                bind:group={selectedAuthentication}
-                value={"github"}
-            />
-            Github
-        </label>
-        {#if selectedAuthentication == "password"}
-            <div>
-                <label for="login">Login</label>
-                <input
-                    class:notAvailab={!loginAvailable}
-                    class:loading={loding}
-                    autocomplete="username"
-                    id="login"
-                    bind:value={login}
-                />
-                <label for="password">Password</label>
-                <input
-                    id="password"
-                    autocomplete="new-password"
-                    bind:value={password}
-                />
-                <button
-                    disabled={loding ||
-                        !loginAvailable ||
-                        !name ||
-                        !password ||
-                        !login}
-                    on:click={registerPassword}>Register</button
-                >
-                {#if loding}
-                    <Loading lable="Checking name" />
-                {/if}
-            </div>
-        {:else if selectedAuthentication == "webauthN-device"}
-            <button on:click={() => RegisterWebAuthN("platform")}
-                >Register Using Device</button
-            >
-        {:else if selectedAuthentication == "webauthN-key"}
-            <button on:click={() => RegisterWebAuthN("cross-platform")}
-                >Register Using Securety Key</button
-            >
-        {:else if selectedAuthentication == "github"}
-            <p>This is not yet supported</p>
-        {/if}
+        <p>You are already loged in you can't accept this invite</p>
     {:else}
-        <p>This was not a valid invite link</p>
+        <button on:click={generateInvite}>Generate Invite</button>
+        {#if inviteLink}
+            <div>
+                <textarea readonly>{inviteLink}</textarea>
+                <p>
+                    This link is valid untill {validUntill.toLocaleString()}
+                </p>
+            </div>
+        {/if}
     {/if}
+{:else if isAuthenticated === false && invite && inviter}
+    <p>You have been invited by {inviter}. Whats your name?</p>
+    <input
+        autocomplete="nickname"
+        bind:value={name}
+        placeholder="Your name..."
+    />
+    <p>Choose a authentication method.</p>
+    <label>
+        <input
+            type="radio"
+            bind:group={selectedAuthentication}
+            value={"password"}
+        />
+        Username & Password
+    </label>
+
+    <label>
+        <input
+            type="radio"
+            bind:group={selectedAuthentication}
+            value={"webauthN-device"}
+        />
+        Device
+    </label>
+    <label>
+        <input
+            type="radio"
+            bind:group={selectedAuthentication}
+            value={"webauthN-key"}
+        />
+        Securety Key
+    </label>
+
+    <label>
+        <input
+            disabled
+            type="radio"
+            bind:group={selectedAuthentication}
+            value={"github"}
+        />
+        Github
+    </label>
+    {#if selectedAuthentication == "password"}
+        <div>
+            <label for="login">Login</label>
+            <input
+                class:notAvailab={!loginAvailable}
+                class:loading={loding}
+                autocomplete="username"
+                id="login"
+                bind:value={login}
+            />
+            <label for="password">Password</label>
+            <input
+                id="password"
+                autocomplete="new-password"
+                bind:value={password}
+            />
+            <button
+                disabled={loding ||
+                    !loginAvailable ||
+                    !name ||
+                    !password ||
+                    !login}
+                on:click={registerPassword}>Register</button
+            >
+            {#if loding}
+                <Loading lable="Checking name" />
+            {/if}
+        </div>
+    {:else if selectedAuthentication == "webauthN-device"}
+        <button on:click={() => RegisterWebAuthN("platform")}
+            >Register Using Device</button
+        >
+    {:else if selectedAuthentication == "webauthN-key"}
+        <button on:click={() => RegisterWebAuthN("cross-platform")}
+            >Register Using Securety Key</button
+        >
+    {:else if selectedAuthentication == "github"}
+        <p>This is not yet supported</p>
+    {/if}
+{:else if !invite}
+    <p>This is not a valid invite link, nor are you loged in...</p>
+{:else if error}
+    <p>{error}</p>
 {:else}
     <Loading />
 {/if}

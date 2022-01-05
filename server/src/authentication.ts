@@ -223,35 +223,62 @@ export function Init(app: ExpressCore) {
             req.logOut();
             res.redirect('/')
         })
-        .get('/api/invite', Authenticated, async (req, res, next) => {
+        .get('/auth/invite', Authenticated, async (req, res, next) => {
             try {
+                const client = await pool.connect();
                 try {
-                    const client = await pool.connect();
-                    try {
-                        var today = new Date();
-                        var tomorrow = new Date();
-                        tomorrow.setDate(today.getDate() + 1);
-                        await client.query('delete from invites where valid_until < NOW();');
-                        const query = await client.query<{ id: string, valid_until: string }>('insert into invites (valid_until, granted_by) values($1, $2) RETURNING id,valid_until;', [tomorrow.toISOString(), req.user?.id]);
-                        if (query.rowCount != 1) {
-                            res.status(500).send(`Wrong number of rows ${query.rowCount}`);
-                            return
-                        }
-                        const result = query.rows[0];
-                        res.status(200).send({
-                            link: `${process.env.URL}invite.html#${result.id}`,
-                            validUntill: result.valid_until
-                        });
-                    } finally {
-                        client.release();
+                    var today = new Date();
+                    var tomorrow = new Date();
+                    tomorrow.setDate(today.getDate() + 1);
+                    await client.query('delete from invites where valid_until < NOW();');
+                    const query = await client.query<{ id: string, valid_until: string }>('insert into invites (valid_until, granted_by) values($1, $2) RETURNING id,valid_until;', [tomorrow.toISOString(), req.user?.id]);
+                    if (query.rowCount != 1) {
+                        res.status(500).send(`Wrong number of rows ${query.rowCount}`);
+                        return
                     }
-                } catch (err) {
-                    console.error(err);
-                    res.status(500).send("Error " + err);
+                    const result = query.rows[0];
+                    res.status(200).send({
+                        link: `${process.env.URL}invite.html#${result.id}`,
+                        validUntill: result.valid_until
+                    });
+                } finally {
+                    client.release();
                 }
-
             } catch (err) {
-                console.error("sending error login", err);
+                console.error(err);
+                res.status(500).send("Error " + err);
+            }
+
+
+        })
+
+        .post('/auth/invite/validate', async (req, res, next) => {
+            try {
+                const client = await pool.connect();
+                try {
+                    const data = req.body as { invite: string };
+                    var today = new Date();
+                    var tomorrow = new Date();
+                    tomorrow.setDate(today.getDate() + 1);
+                    await client.query('delete from invites where valid_until < NOW();');
+                    const query = await client.query<db_invite>('select * from invites where id = $1;', [data.invite]);
+                    if (query.rowCount != 1) {
+                        res.status(404).send(`No invite found`);
+                        return
+                    }
+                    const result = query.rows[0];
+                    const query2 = await client.query<db_user>('select * from users where id = $1;', [result.granted_by]);
+                    const result2 = query2.rows[0];
+
+                    res.status(200).send({
+                        granted_by: result2.name,
+                        validUntill: result.valid_until
+                    });
+                } finally {
+                    client.release();
+                }
+            } catch (err) {
+                console.error(err);
                 res.status(500).send("Error " + err);
             }
         })
