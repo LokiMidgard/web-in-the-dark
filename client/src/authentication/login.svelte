@@ -39,7 +39,7 @@
     }
 </script>
 
-<form>
+<div>
     <label for="login">Login</label>
     <input autocomplete="username" id="login" bind:value={login} />
     <label for="password">Password</label>
@@ -52,6 +52,6 @@
     <button disabled={!(login && password)} on:click={passwordLogin}
         >login</button
     >
-</form>
+</div>
 
 <button on:click={webauthLogin}>Login With Device</button>
