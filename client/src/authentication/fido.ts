@@ -33,7 +33,7 @@ interface CredentialOptions {
     //specifies whether you need an attestation statement
     attestation: AttestationConveyancePreference;
 }
-type attachment = 'platform' | 'cross-platform';
+export type attachment = 'platform' | 'cross-platform';
 
 declare global {
 

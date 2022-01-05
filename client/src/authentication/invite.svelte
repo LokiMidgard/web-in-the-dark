@@ -2,7 +2,11 @@
     import type { Login, CheckLogin, isAuthenticated } from "blade-common";
     import * as fido from "./fido";
 
-    type availableAuthentication = "password" | "WebauthN" | "github";
+    type availableAuthentication =
+        | "password"
+        | "webauthN-device"
+        | "webauthN-key"
+        | "github";
     import type common from "blade-common";
     import { onMount } from "svelte";
     import { readable } from "svelte/store";
@@ -97,7 +101,7 @@
         validUntill = responst.validUntill;
     }
 
-    async function RegisterWebAuthN() {
+    async function RegisterWebAuthN(attachment: fido.attachment) {
         try {
             const registration = await sendServer<
                 void,
@@ -137,7 +141,11 @@
 {:else if isAuthenticated === false}
     {#if invite}
         <p>You have been invited. Whats your name?</p>
-        <input bind:value={name} placeholder="Your name..." />
+        <input
+            autocomplete="nickname"
+            bind:value={name}
+            placeholder="Your name..."
+        />
         <p>Choose a authentication method.</p>
         <label>
             <input
@@ -152,13 +160,22 @@
             <input
                 type="radio"
                 bind:group={selectedAuthentication}
-                value={"WebauthN"}
+                value={"webauthN-device"}
             />
-            Browser
+            Device
+        </label>
+        <label>
+            <input
+                type="radio"
+                bind:group={selectedAuthentication}
+                value={"webauthN-key"}
+            />
+            Securety Key
         </label>
 
         <label>
             <input
+                disabled
                 type="radio"
                 bind:group={selectedAuthentication}
                 value={"github"}
@@ -166,16 +183,21 @@
             Github
         </label>
         {#if selectedAuthentication == "password"}
-            <form>
+            <div>
                 <label for="login">Login</label>
                 <input
                     class:notAvailab={!loginAvailable}
                     class:loading={loding}
+                    autocomplete="username"
                     id="login"
                     bind:value={login}
                 />
                 <label for="password">Password</label>
-                <input id="password" bind:value={password} />
+                <input
+                    id="password"
+                    autocomplete="new-password"
+                    bind:value={password}
+                />
                 <button
                     disabled={loding ||
                         !loginAvailable ||
@@ -187,10 +209,15 @@
                 {#if loding}
                     <Loading lable="Checking name" />
                 {/if}
-            </form>
-        {:else if selectedAuthentication == "WebauthN"}
-            <p>This is not yet supported</p>
-            <button on:click={RegisterWebAuthN}>Register Using Device</button>
+            </div>
+        {:else if selectedAuthentication == "webauthN-device"}
+            <button on:click={() => RegisterWebAuthN("platform")}
+                >Register Using Device</button
+            >
+        {:else if selectedAuthentication == "webauthN-key"}
+            <button on:click={() => RegisterWebAuthN("cross-platform")}
+                >Register Using Securety Key</button
+            >
         {:else if selectedAuthentication == "github"}
             <p>This is not yet supported</p>
         {/if}
