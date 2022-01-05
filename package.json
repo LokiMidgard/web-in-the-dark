@@ -7,7 +7,9 @@
     "npm": "8.x"
   },
   "scripts": {
-    "local": "npm i && heroku local"
+    "local": "npm run build && heroku local",
+    "build": "npm run build -ws",
+    "start": "node dist/index.js"
   },
   "workspaces": [
     "common",
