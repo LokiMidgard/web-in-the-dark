@@ -7,7 +7,7 @@ import sveltePreprocess from 'svelte-preprocess';
 import typescript from '@rollup/plugin-typescript';
 import css from 'rollup-plugin-css-only';
 import { defineConfig } from 'rollup';
-import copy from 'rollup-plugin-copy'
+import copy from '@guanghechen/rollup-plugin-copy'
 
 const production = !process.env.ROLLUP_WATCH;
 
@@ -88,6 +88,10 @@ const COMMON = function (input, index) {
 			index == 0 && copy({
 				targets: [{
 					src: ['public/**/*', '!**/template.html'],
+					dest: `../dist/public/`
+				},
+				{
+					src: '../node_modules/@picocss/pico/css/pico.min.css',
 					dest: `../dist/public/`
 				}
 				]

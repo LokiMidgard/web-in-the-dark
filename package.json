@@ -9,7 +9,7 @@
   "scripts": {
     "local": "npm run build && heroku local",
     "build": "npm run build -ws",
-    "dev": "concurrently \"npm run dev -w client\" \"npm run dev:build -w server\" \"npm run dev:serve -w server\"",
+    "dev": "concurrently \"npm run dev -w client\" \"npm run dev:build -w server\" \"npm run dev:serv -w server\"",
     "start": "node dist/index.js"
   },
   "workspaces": [
