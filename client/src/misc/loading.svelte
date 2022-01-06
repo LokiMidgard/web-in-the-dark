@@ -1,8 +1,15 @@
 <script lang="ts">
     export let lable: string | undefined = undefined;
+    export let color: string = "#fff";
+    export let colorHover: string = "#e45635";
+    export let size: string = "100px";
+    export let fontSize: string = "10px";
 </script>
 
-<div class="loading-container">
+<div
+    class="loading-container"
+    style="--size: {size}; --color: {color}; --color-hover: {colorHover}; --font-size: {fontSize};"
+>
     <div class="loading" />
     <div id="loading-text">{lable ?? "loading"}</div>
 </div>
@@ -206,19 +213,19 @@
     }
     div.loading-container,
     div.loading {
-        height: 100px;
+        height: var(--size);
         position: relative;
-        width: 100px;
+        width: var(--size);
         border-radius: 100%;
     }
 
-    div.loading-container {
+    /* div.loading-container {
         margin: 40px auto;
-    }
+    } */
 
     div.loading {
         border: 2px solid transparent;
-        border-color: transparent #fff transparent #fff;
+        border-color: transparent var(--color) transparent var(--color);
         -moz-animation: rotate-loading 1.5s linear 0s infinite normal;
         -moz-transform-origin: 50% 50%;
         -o-animation: rotate-loading 1.5s linear 0s infinite normal;
@@ -230,7 +237,8 @@
     }
 
     div.loading-container:hover div.loading {
-        border-color: transparent #e45635 transparent #e45635;
+        border-color: transparent var(--color-hover) transparent
+            var(--color-hover);
     }
     div.loading-container:hover div.loading,
     div.loading-container div.loading {
@@ -246,16 +254,19 @@
         -o-animation: loading-text-opacity 2s linear 0s infinite normal;
         -webkit-animation: loading-text-opacity 2s linear 0s infinite normal;
         animation: loading-text-opacity 2s linear 0s infinite normal;
-        color: #ffffff;
+        color: var(--color);
         font-family: "Helvetica Neue, " Helvetica ", " "arial";
-        font-size: 10px;
+        font-size: var(--font-size);
         font-weight: bold;
-        margin-top: 45px;
+        margin-top: calc((var(--size) - var(--font-size)/2) / 2);
         opacity: 0;
         position: absolute;
         text-align: center;
         text-transform: uppercase;
         top: 0;
-        width: 100px;
+        width: calc(4px + var(--size));
+        margin-left: auto;
+        margin-right: auto;
+        overflow: hidden;
     }
 </style>
