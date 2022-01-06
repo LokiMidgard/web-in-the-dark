@@ -50,6 +50,24 @@ declare global {
         }
     }
 }
+
+export async function isPlatformSupported() {
+    if (PublicKeyCredential && typeof PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable !== "function") {
+        return false;
+    } else if (PublicKeyCredential && typeof PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable === "function") {
+        try {
+            const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()
+            if (!available) {
+                return false;
+            }
+
+        } catch {
+            return false;
+        }
+        return true;
+    }
+}
+
 /**
  * Calls the .create() webauthn APIs and sends returns to server
  * @param {ArrayBuffer} challenge challenge to use
@@ -101,8 +119,6 @@ export async function createCredential(challenge: string, userId: string, attach
         //specifies whether you need an attestation statement
         attestation: "none"
     };
-
-
     const rawAttestation = await navigator.credentials.create({
         publicKey: createCredentialOptions
     });
@@ -112,11 +128,6 @@ export async function createCredential(challenge: string, userId: string, attach
         clientDataJSON: arrayBufferToString(rawAttestation.response.clientDataJSON),
         attestationObject: base64encode(rawAttestation.response.attestationObject)
     };
-
-    // console.log("=== Attestation response ===");
-    // logVariable("id (base64)", attestation.id);
-    // logVariable("clientDataJSON", attestation.clientDataJSON);
-    // logVariable("attestationObject (base64)", attestation.attestationObject);
 
     const send: common.RegsiterAccount<common.WebAuthN> = {
         invite: invite,
@@ -176,13 +187,6 @@ export async function getAssertion(challenge: string) {
         signature: base64encode(rawAssertion.response.signature),
         authenticatorData: base64encode(rawAssertion.response.authenticatorData)
     };
-
-    // console.log("=== Assertion response ===");
-    // logVariable("id (base64)", assertion.id);
-    // logVariable("userHandle (base64)", assertion.userHandle);
-    // logVariable("authenticatorData (base64)", assertion.authenticatorData);
-    // logVariable("clientDataJSON", assertion.clientDataJSON);
-    // logVariable("signature (base64)", assertion.signature);
 
     const response = await sendServer("/auth/webauth/login", "post", assertion);
     return response;

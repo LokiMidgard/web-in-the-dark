@@ -15,6 +15,10 @@
 
     let isAuthenticated: boolean | undefined;
 
+    let isWebauthPlatformAvailable = false;
+    (async () =>
+        (isWebauthPlatformAvailable = await fido.isPlatformSupported()))();
+
     var enc = new TextEncoder(); // always utf-8
     var dec = new TextDecoder(); // always utf-8
 
@@ -68,12 +72,13 @@
     let loginAvailable = true;
     $: checkLogin(login);
     let loding = false;
+    let loginLoding = false;
     async function checkLogin(newLogin: string) {
         if (!newLogin) {
             loginAvailable = false;
-            loding = false;
+            loginLoding = false;
         } else {
-            loding = true;
+            loginLoding = true;
             const data: CheckLogin = {
                 login: newLogin,
             };
@@ -91,7 +96,8 @@
             });
 
             loginAvailable = result.status == 404;
-            loding = false;
+            //this is not an an try finaly intentionaly
+            loginLoding = false;
         }
     }
     let error: string | undefined;
@@ -137,10 +143,10 @@
                 { challenge: string; id: string }
             >("/auth/webauth/challenge", "get");
 
-            fido.createCredential(
+            await fido.createCredential(
                 registration.challenge,
                 registration.id,
-                "platform",
+                attachment,
                 invite,
                 name
             );
@@ -152,7 +158,7 @@
 </script>
 
 {#if error}
-    <p class="warn">{error}</p>
+    <p class="error">{error}</p>
 {/if}
 {#if isAuthenticated === true}
     {#if invite}
@@ -169,87 +175,150 @@
         {/if}
     {/if}
 {:else if isAuthenticated === false && invite && inviter}
-    <p>You have been invited by {inviter}. Whats your name?</p>
-    <input
-        autocomplete="nickname"
-        bind:value={name}
-        placeholder="Your name..."
-    />
-    <p>Choose a authentication method.</p>
-    <label>
-        <input
-            type="radio"
-            bind:group={selectedAuthentication}
-            value={"password"}
-        />
-        Username & Password
-    </label>
+    <div class="root">
+        <dialog>
+            <header>
+                <p>You have been invited by {inviter}. Whats your name?</p>
+                <input
+                    class:error={!name}
+                    autocomplete="nickname"
+                    bind:value={name}
+                    placeholder="Your name..."
+                />
+            </header>
+            <nav>
+                <p>Choose a authentication method.</p>
+                <label>
+                    <input
+                        type="radio"
+                        bind:group={selectedAuthentication}
+                        value={"password"}
+                    />
+                    Username & Password
+                </label>
 
-    <label>
-        <input
-            type="radio"
-            bind:group={selectedAuthentication}
-            value={"webauthN-device"}
-        />
-        Device
-    </label>
-    <label>
-        <input
-            type="radio"
-            bind:group={selectedAuthentication}
-            value={"webauthN-key"}
-        />
-        Securety Key
-    </label>
+                <label>
+                    <input
+                        disabled={!isWebauthPlatformAvailable}
+                        type="radio"
+                        bind:group={selectedAuthentication}
+                        value={"webauthN-device"}
+                    />
+                    Device
+                </label>
+                <label>
+                    <input
+                        type="radio"
+                        bind:group={selectedAuthentication}
+                        value={"webauthN-key"}
+                    />
+                    Securety Key
+                </label>
 
-    <label>
-        <input
-            disabled
-            type="radio"
-            bind:group={selectedAuthentication}
-            value={"github"}
-        />
-        Github
-    </label>
-    {#if selectedAuthentication == "password"}
-        <div>
-            <label for="login">Login</label>
-            <input
-                class:notAvailab={!loginAvailable}
-                class:loading={loding}
-                autocomplete="username"
-                id="login"
-                bind:value={login}
-            />
-            <label for="password">Password</label>
-            <input
-                id="password"
-                autocomplete="new-password"
-                bind:value={password}
-            />
-            <button
-                disabled={loding ||
-                    !loginAvailable ||
-                    !name ||
-                    !password ||
-                    !login}
-                on:click={registerPassword}>Register</button
-            >
-            {#if loding}
-                <Loading lable="Checking name" />
-            {/if}
-        </div>
-    {:else if selectedAuthentication == "webauthN-device"}
-        <button on:click={() => RegisterWebAuthN("platform")}
-            >Register Using Device</button
-        >
-    {:else if selectedAuthentication == "webauthN-key"}
-        <button on:click={() => RegisterWebAuthN("cross-platform")}
-            >Register Using Securety Key</button
-        >
-    {:else if selectedAuthentication == "github"}
-        <p>This is not yet supported</p>
-    {/if}
+                <label>
+                    <input
+                        disabled
+                        type="radio"
+                        bind:group={selectedAuthentication}
+                        value={"github"}
+                    />
+                    Github
+                </label>
+            </nav>
+            <div>
+                {#if selectedAuthentication == "password"}
+                    <div class="password-register">
+                        <div>
+                            {#if loginLoding}
+                                <i style="right: 0px;">
+                                    <Loading
+                                        size="20px"
+                                        color="blue"
+                                        lable="check"
+                                        fontSize="3px"
+                                    /></i
+                                >
+                            {/if}
+                            <input
+                                class:error={!loginAvailable}
+                                class:loading={loginLoding}
+                                autocomplete="username"
+                                placeholder="Login"
+                                id="login"
+                                bind:value={login}
+                            />
+
+                            <input
+                                id="password"
+                                class:error={!password}
+                                placeholder="Password"
+                                autocomplete="new-password"
+                                bind:value={password}
+                            />
+                        </div>
+                        <button
+                            disabled={loding ||
+                                !loginAvailable ||
+                                !name ||
+                                !password ||
+                                !login}
+                            on:click={registerPassword}>Register</button
+                        >
+                    </div>
+
+                    <p>
+                        This is a hobby project. Do <strong class="realy"
+                            >not</strong
+                        > use this password anywhere else. It can't beguarantied
+                        that it is stored securly!
+                    </p>
+                    {#if isWebauthPlatformAvailable}
+                        <p>
+                            Your device supports password less authentication.
+                            You can choose it or any other one on the left. This
+                            is recommended.
+                        </p>
+                    {:else}
+                        <p>
+                            If you have a securety Key like <em>fido</em> use that
+                            instead.
+                        </p>
+                    {/if}
+                {:else if selectedAuthentication == "webauthN-device"}
+                    <button
+                        on:click={() => RegisterWebAuthN("platform")}
+                        disabled={loding || !name}>Register Using Device</button
+                    >
+                    <p>
+                        You can only authenticate on <strong class="realy"
+                            >this</strong
+                        > device.
+                    </p>
+                    <p>
+                        It is not <em>yet</em> supported to add multipple authentications.
+                        So you can't use this account on another device
+                    </p>
+                {:else if selectedAuthentication == "webauthN-key"}
+                    <button
+                        on:click={() => RegisterWebAuthN("cross-platform")}
+                        disabled={loding || !name}
+                        >Register Using Securety Key</button
+                    >
+                    <p>
+                        You can only authenticate with <strong class="realy"
+                            >this</strong
+                        > securety key.
+                    </p>
+                    <p>
+                        It is not <em>yet</em> supported to add multipple authentications.
+                        So you can't use this account without this key.
+                    </p>
+                {:else if selectedAuthentication == "github"}
+                    <p>This is not yet supported</p>
+                {/if}
+            </div>
+        </dialog>
+    </div>
 {:else if !invite}
     <p>This is not a valid invite link, nor are you loged in...</p>
 {:else if error}
@@ -259,10 +328,74 @@
 {/if}
 
 <style lang="scss">
-    .warn {
+    .root {
+        display: flex;
+
+        height: 100%;
+        width: 100%;
+        justify-items: center;
+        align-items: center;
+
+        > dialog {
+            display: grid;
+            grid-template-columns: max-content min-content;
+            grid-template-rows: min-content min-content;
+            gap: 1rem;
+            grid-template-areas: "head head" "selection main";
+            min-height: 30rem;
+            button {
+                display: block;
+                text-align: center;
+                width: 100%;
+            }
+
+            > header {
+                grid-area: head;
+                justify-self: center;
+                text-align: center;
+            }
+            > nav {
+                grid-area: selection;
+            }
+            > div {
+                min-width: 25rem;
+                grid-area: main;
+                justify-self: center;
+                align-self: center;
+
+                > .password-register {
+                    > div {
+                        > i {
+                            position: absolute;
+                            padding: 10px;
+                            min-width: 40px;
+                        }
+
+                        > input {
+                            width: 100%;
+                            padding: 10px;
+                            text-align: center;
+                        }
+                    }
+
+                    width: 100%;
+                    margin-bottom: 10px;
+
+                    display: flex;
+                    text-align: center;
+                    flex-direction: column;
+                }
+            }
+        }
+    }
+
+    strong.realy {
+        text-transform: uppercase;
+    }
+    .error {
         border: 2px red solid;
     }
-    .notAvailab {
+    input.error {
         border: 1px red solid;
         background-color: lightcoral;
     }
