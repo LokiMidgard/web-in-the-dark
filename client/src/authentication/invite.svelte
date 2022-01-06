@@ -11,7 +11,7 @@
     import type common from "blade-common";
     import { onMount } from "svelte";
     import { readable } from "svelte/store";
-    import { delay, sendServer } from "../main/helper";
+    import { delay, sendServer } from "../misc/helper";
     import Loading from "../misc/loading.svelte";
     import App from "../main/App.svelte";
     import { flatStore } from "../misc/flatstore";

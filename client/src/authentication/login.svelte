@@ -1,6 +1,7 @@
 <script lang="ts">
     import type common from "blade-common";
-    import { sendServer } from "../main/helper";
+    import Frame from "../misc/frame.svelte";
+    import { sendServer } from "../misc/helper";
     import * as fido from "./fido";
     let name: string | undefined;
     let password: string | undefined;
@@ -39,19 +40,29 @@
     }
 </script>
 
-<div>
-    <label for="login">Login</label>
-    <input autocomplete="username" id="login" bind:value={login} />
-    <label for="password">Password</label>
-    <input
-        autocomplete="current-password"
-        id="password"
-        type="password"
-        bind:value={password}
-    />
-    <button disabled={!(login && password)} on:click={passwordLogin}
-        >login</button
-    >
-</div>
-
-<button on:click={webauthLogin}>Login With Device</button>
+<Frame>
+    <article>
+        <header>
+            <p>Choose your login method</p>
+        </header>
+        <details open>
+            <summary> With Device / Key </summary>
+            <button on:click={webauthLogin}>Login</button>
+        </details>
+        <details open>
+            <summary> With Login Password </summary>
+            <label for="login">Login</label>
+            <input autocomplete="username" id="login" bind:value={login} />
+            <label for="password">Password</label>
+            <input
+                autocomplete="current-password"
+                id="password"
+                type="password"
+                bind:value={password}
+            />
+            <button disabled={!(login && password)} on:click={passwordLogin}
+                >login</button
+            >
+        </details>
+    </article>
+</Frame>

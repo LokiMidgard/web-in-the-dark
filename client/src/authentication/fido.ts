@@ -1,5 +1,5 @@
 import type * as common from 'blade-common';
-import { sendServer } from "../main/helper";
+import { sendServer } from "../misc/helper";
 
 type AttestationConveyancePreference = "direct" | "enterprise" | "indirect" | "none";
 

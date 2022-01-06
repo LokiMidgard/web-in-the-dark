@@ -3,7 +3,7 @@
 
     import { onMount } from "svelte";
     import { GlobalData } from "../main/globalData";
-    import { sendServer } from "../main/helper";
+    import { sendServer } from "./helper";
     import { flatStore } from "./flatstore";
 
     const data = flatStore(GlobalData.instance);
@@ -48,11 +48,12 @@
         </li>
     </ul>
     <ul>
+        <li><a href="/">Overview</a></li>
         {#if $data.name}
-            <li><a href="/invite.html">Invete</a> new scundrels.</li>
+            <li><a href="/invite.html">Invete</a></li>
             <li><a href="/auth/logout">logout</a></li>
         {:else}
-            <li><a href="/login.html">Login</a> for more options.</li>
+            <li><a href="/login.html">Login</a></li>
         {/if}
     </ul>
 </nav>
@@ -61,4 +62,9 @@
 </main>
 
 <style lang="scss">
+    nav {
+        // not sure why I nedd this...
+        margin-left: var(--spacing);
+        margin-right: var(--spacing);
+    }
 </style>

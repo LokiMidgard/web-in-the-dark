@@ -1,5 +1,5 @@
 <script lang="ts" context="module">
-    import { delay, Dictionary, dictionary } from "./helper";
+    import { delay, Dictionary, dictionary } from "./../misc/helper";
 
     export interface ClockInstance {
         name: string;
