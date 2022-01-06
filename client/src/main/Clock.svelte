@@ -1,5 +1,5 @@
 <script lang="ts" context="module">
-    import { Dictionary, dictionary } from "./helper";
+    import { delay, Dictionary, dictionary } from "./helper";
 
     export interface ClockInstance {
         name: string;
@@ -73,14 +73,14 @@
 
     let shouldDelete = false;
 
-    let hasChanges:boolean;
-    $: hasChanges = shouldDelete|| nameHasChanges|| segmentsHasChanges;
+    let hasChanges: boolean;
+    $: hasChanges = shouldDelete || nameHasChanges || segmentsHasChanges;
 
     function cancel() {
         shouldDelete = false;
         segments = clock.segments;
         name = clock.name;
-        isOpen=false;
+        toggle();
     }
     async function save() {
         if (shouldDelete) {
@@ -130,8 +130,19 @@
     }
 
     let isOpen = false;
-    function toggle() {
-        isOpen = !isOpen;
+    async function toggle() {
+        if (isOpen) {
+            document.querySelector("html").classList.add("modal-is-closing");
+            console.log("laksjdflas");
+            await delay(500);
+            isOpen = !isOpen;
+            document.querySelector("html").classList.remove("modal-is-closing");
+        } else if (!isOpen) {
+            document.querySelector("html").classList.add("modal-is-opening");
+            isOpen = !isOpen;
+            await delay(1000);
+            document.querySelector("html").classList.remove("modal-is-opening");
+        }
     }
 </script>
 
@@ -159,7 +170,7 @@
     <h6>{clock.name}</h6>
 
     {#if editable}
-        <a  href="#non"  on:click={toggle}>Edit</a>
+        <a href="#non" on:click={toggle}>Edit</a>
         <dialog open={isOpen}>
             <article style="min-width: 40rem;">
                 <textarea bind:value={name} />
@@ -176,17 +187,11 @@
                     >Delete</button
                 >
                 <footer>
-                    <button
-                        class="secondary"
-                        on:click={cancel}
-                    >
+                    <button class="secondary" on:click={cancel}>
                         cancel
                     </button>
 
-                    <button
-                        on:click={save}
-                        disabled={!hasChanges}
-                    >
+                    <button on:click={save} disabled={!hasChanges}>
                         Confirm
                     </button>
                 </footer>

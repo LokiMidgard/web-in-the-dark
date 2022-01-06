@@ -14,23 +14,16 @@
     import { delay, sendServer } from "../main/helper";
     import Loading from "../misc/loading.svelte";
     import App from "../main/App.svelte";
+    import { flatStore } from "../misc/flatstore";
+    import { GlobalData } from "../main/globalData";
 
-    let isAuthenticated: boolean | undefined;
+    const globalData = flatStore(GlobalData.instance);
 
     let isWebauthPlatformAvailable = false;
     (async () =>
         (isWebauthPlatformAvailable = await fido.isPlatformSupported()))();
 
-    var enc = new TextEncoder(); // always utf-8
-    var dec = new TextDecoder(); // always utf-8
 
-    onMount(async () => {
-        const result = await sendServer<void, isAuthenticated>(
-            "/auth/isAuthenticated",
-            "get"
-        );
-        isAuthenticated = result.isAuthenticated;
-    });
     let invite: string | undefined;
     $: checkInvite(invite);
     invite = location.hash?.substring(1);
@@ -161,24 +154,31 @@
 
 <Frame>
     {#if error}
-        <p class="error">{error}</p>
+        <article class="warning">{error}</article>
     {/if}
-    {#if isAuthenticated === true}
-        {#if invite}
-            <p>You are already loged in you can't accept this invite</p>
-        {:else}
-            <button on:click={generateInvite}>Generate Invite</button>
-            {#if inviteLink}
-                <div>
-                    <textarea readonly>{inviteLink}</textarea>
-                    <p>
-                        This link is valid untill {validUntill.toLocaleString()}
-                    </p>
-                </div>
+    <article>
+        {#if loding}
+            <Loading />
+        {:else if $globalData.isAuthenticated === true}
+            {#if invite}
+                <p>You are already loged in you can't accept this invite</p>
+                <p><a href="/invite.html">Invite</a> someone else instead.</p>
+            {:else}
+                <p>
+                    You can invite new scundreals by sending them an invite
+                    link. This will allow them to generate a new account
+                </p>
+                <button on:click={generateInvite}>Generate Invite</button>
+                {#if inviteLink}
+                    <div>
+                        <textarea readonly>{inviteLink}</textarea>
+                        <p>
+                            This link is valid untill {validUntill.toLocaleString()}
+                        </p>
+                    </div>
+                {/if}
             {/if}
-        {/if}
-    {:else if isAuthenticated === false && invite && inviter}
-        <article>
+        {:else if $globalData.isAuthenticated === false && invite}
             <header>
                 <p>You have been invited by {inviter}. Whats your name?</p>
                 <input
@@ -322,16 +322,15 @@
                     {/if}
                 </div>
             </div>
-        </article>
-    {:else if !invite}
-        <p>This is not a valid invite link, nor are you loged in...</p>
-    {:else if error}
-        <p>{error}</p>
-    {:else}
-        <Loading />
-    {/if}
+        {/if}
+    </article>
 </Frame>
 
 <style lang="scss">
-  
+    .warning {
+        border: var(--form-element-invalid-border-color) 1px solid;
+    }
+    article:empty{
+        display: none;
+    }
 </style>

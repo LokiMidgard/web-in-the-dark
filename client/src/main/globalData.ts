@@ -1,6 +1,6 @@
 import type { isAuthenticated } from "blade-common";
 import { derived, Readable, readable } from "svelte/store";
-import { sendServer } from "./helper";
+import { delay, sendServer } from "./helper";
 
 export class GlobalData {
 
@@ -15,20 +15,25 @@ export class GlobalData {
 
     private static _instance: GlobalData | undefined;
     public static get instance(): GlobalData {
-        if (!this._instance) {
-            this._instance = new GlobalData(readable(undefined, (set) => {
+        if (!GlobalData._instance) {
+            GlobalData._instance = new GlobalData(readable<isAuthenticated>(undefined, (set) => {
                 (async () => {
-
-                    const result = await sendServer<void, isAuthenticated>(
-                        "/auth/isAuthenticated",
-                        "get"
-                    );
-                    set(result);
-                })()
-
+                    try {
+                        const result = await sendServer<void, isAuthenticated>(
+                            "/auth/isAuthenticated",
+                            "get"
+                        );
+                        set(result);
+                    } catch (e) {
+                        console.error(e)
+                    }
+                })();
+                return function stop() {
+                    ;
+                };
             }));
         }
-        return this._instance;
+        return GlobalData._instance;
     }
 
 
