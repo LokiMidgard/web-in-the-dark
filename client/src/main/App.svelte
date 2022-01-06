@@ -8,19 +8,13 @@
 	import ioclient from "socket.io-client";
 	import { onMount } from "svelte";
 	import type { isAuthenticated } from "blade-common";
+import Frame from "../misc/frame.svelte";
+import { flatStore } from "../misc/flatstore";
+import { GlobalData } from "./globalData";
 	const socket = ioclient();
 
-	let isAuthenticated: boolean | undefined;
-	let userName: string | undefined;
+	const data = flatStore(GlobalData.instance);
 
-	onMount(async () => {
-		const result = await sendServer<void, isAuthenticated>(
-			"/auth/isAuthenticated",
-			"get"
-		);
-		isAuthenticated = result.isAuthenticated;
-		userName = result.userName;
-	});
 
 	socket.on("update_clock", async (data: ClockInstance) => {
 		console.debug("update clock", data);
@@ -50,22 +44,15 @@
 	}
 
 	let edit: boolean;
-	$: edit = isAuthenticated;
+	$: edit = $data.isAuthenticated ?? false;
 
 	let clocksPromise = getCloks();
 </script>
 
-<main>
-	<h1>Web in the Dark</h1>
-	<p>The crews clocks...</p>
-	{#if userName}
-		<p>
-			<a href="/invite.html">Invete</a> new scundrels. Or
-			<a href="/auth/logout">logout</a>.
-		</p>
-	{:else}
-		<p><a href="/login.html">Login</a> for more options.</p>
-	{/if}
+<Frame>
+
+
+	
 	{#if edit}
 		<button on:click={newClock}>Add Clock</button>
 	{/if}
@@ -80,13 +67,14 @@
 			<p>{e}</p>
 		{/await}
 	</div>
-</main>
+</Frame>
 
 <style>
-	.clocks {
+	 .clocks {
 		display: flex;
 		flex-wrap: wrap;
 	}
+	/*
 	main {
 		text-align: center;
 		padding: 1em;
@@ -105,5 +93,5 @@
 		main {
 			max-width: none;
 		}
-	}
+	}  */
 </style>

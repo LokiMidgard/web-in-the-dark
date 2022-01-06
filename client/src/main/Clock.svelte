@@ -28,7 +28,7 @@
                 "Content-Type": "application/json",
             },
         });
-        console.debug("Status patch",response.status);
+        console.debug("Status patch", response.status);
     }
 
     export async function deleteClock(clock: ClockInstance): Promise<void> {
@@ -39,7 +39,7 @@
                 "Content-Type": "application/json",
             },
         });
-        console.debug("status delete",response.status);
+        console.debug("status delete", response.status);
     }
 
     export async function createClock(
@@ -52,7 +52,7 @@
             },
             body: JSON.stringify(clock),
         });
-        console.debug("Status PUT",response.status);
+        console.debug("Status PUT", response.status);
         const id = await response.text();
         return parseInt(id);
     }
@@ -62,9 +62,40 @@
     export let clock: ClockInstance;
     export let editable: boolean = false;
 
+    // changes that need confirmation
     let name = clock.name;
     let nameHasChanges: boolean;
     $: nameHasChanges = name != clock.name;
+
+    let segments = clock.segments;
+    let segmentsHasChanges: boolean;
+    $: segmentsHasChanges = segments != clock.segments;
+
+    let shouldDelete = false;
+
+    let hasChanges:boolean;
+    $: hasChanges = shouldDelete|| nameHasChanges|| segmentsHasChanges;
+
+    function cancel() {
+        shouldDelete = false;
+        segments = clock.segments;
+        name = clock.name;
+        isOpen=false;
+    }
+    async function save() {
+        if (shouldDelete) {
+            await deleteClock(clock);
+        } else if (!nameHasChanges && !segmentsHasChanges) {
+            return;
+        } else {
+            clock.segments = Math.max(2, segments);
+            clock.value = Math.max(0, Math.min(clock.segments, clock.value));
+
+            clock.name = name;
+
+            await updateClock(clock);
+        }
+    }
 
     function updateText() {
         if (clock.name != name) {
@@ -73,7 +104,7 @@
         }
     }
 
-    function segments(clock: number): number[] {
+    function iterateSegments(clock: number): number[] {
         const result: number[] = [];
         for (let index = 0; index < clock; index++) {
             result.push(index);
@@ -90,78 +121,96 @@
             updateClock(clock);
         }
     }
+
     function changeSegments(change: number) {
         const oldSegment = clock.segments;
         const oldValue = clock.value;
-        clock.segments = Math.max(2, clock.segments + change);
-        clock.value = Math.max(0, Math.min(clock.segments, clock.value));
+        segments = Math.max(2, segments + change);
+        // clock.value = Math.max(0, Math.min(clock.segments, clock.value));
+    }
 
-        if (oldSegment != clock.segments || oldValue != clock.value) {
-            updateClock(clock);
-        }
+    let isOpen = false;
+    function toggle() {
+        isOpen = !isOpen;
     }
 </script>
 
-<div class="border">
-    {#if editable}
-        <button on:click={() => deleteClock(clock)}>Delete</button>
-    {/if}
-    <div class="clock">
-        <div
-            class="pie"
-            style="--value: {clock.value}; --clock: {clock.segments}"
-        />
-        {#each segments(clock.segments) as s}
+<article>
+    <header>
+        <div class="clock">
             <div
-                class="marking"
-                style="--value: {s}; --clock: {clock.segments}"
+                class="pie"
+                style="--value: {clock.value}; --clock: {segments}"
             />
-        {/each}
-    </div>
-
-    {#if editable}
-        <input type="text" bind:value={name} />
-        {#if nameHasChanges}
-            <button on:click={updateText}>Update Text</button>
+            {#each iterateSegments(segments) as s}
+                <div
+                    class="marking"
+                    style="--value: {s}; --clock: {segments}"
+                />
+            {/each}
+        </div>
+        {#if editable}
+            <div class="grid">
+                <a href="#non" on:click={() => change(1)}>+</a>
+                <a href="#non" on:click={() => change(-1)}>-</a>
+            </div>
         {/if}
-    {:else}
-        <h1>{clock.name}</h1>
-    {/if}
+    </header>
+    <h6>{clock.name}</h6>
 
     {#if editable}
-        <h2>Value</h2>
-        <div>
-            <button on:click={() => change(1)}>+</button>
-            <button on:click={() => change(-1)}>-</button>
-        </div>
-        <h2>Segments</h2>
-        <div>
-            <button on:click={() => changeSegments(1)}>+</button>
-            <button on:click={() => changeSegments(-1)}>-</button>
-        </div>
-    {/if}
-</div>
+        <a  href="#non"  on:click={toggle}>Edit</a>
+        <dialog open={isOpen}>
+            <article style="min-width: 40rem;">
+                <textarea bind:value={name} />
 
-<style>
-    h1 {
-        font-size: 1.4em;
+                <h6>Segments {segments}</h6>
+                <div class="grid">
+                    <button on:click={() => changeSegments(1)}>+</button>
+                    <button on:click={() => changeSegments(-1)}>-</button>
+                </div>
+                <button
+                    class:outline={!shouldDelete}
+                    class="contrast"
+                    on:click={() => (shouldDelete = !shouldDelete)}
+                    >Delete</button
+                >
+                <footer>
+                    <button
+                        class="secondary"
+                        on:click={cancel}
+                    >
+                        cancel
+                    </button>
+
+                    <button
+                        on:click={save}
+                        disabled={!hasChanges}
+                    >
+                        Confirm
+                    </button>
+                </footer>
+            </article>
+        </dialog>
+    {/if}
+</article>
+
+<style lang="scss">
+    :global(:not(dialog)) > article {
+        width: 15rem;
+        margin: 1rem;
+        padding-bottom: 1rem;
+        > header {
+            margin-bottom: 1rem;
+        }
     }
-    .border {
-        border: 2px solid black;
-        border-radius: 2px;
-        width: min-content;
-        padding: 8px;
-        height: min-content;
-        margin: 12px;
-        color: aliceblue;
-        background: #555;
-    }
+
     .marking {
         content: "";
         position: absolute;
         width: 4px;
         height: calc(50% + 2px);
-        background: #859787;
+        background: var(--secondary);
         z-index: 0;
         left: calc(50% - 2px);
         top: calc(50% - 2px);
@@ -174,14 +223,22 @@
     .clock {
         width: 7rem;
         height: 7rem;
-        border: 7px solid #282828;
-        box-shadow: -4px -4px 10px rgba(67, 67, 67, 0.5),
-            inset 4px 4px 10px rgba(0, 0, 0, 0.5),
-            inset -4px -4px 10px rgba(67, 67, 67, 0.5),
-            4px 4px 10px rgba(0, 0, 0, 0.3);
+        border: 7px solid var(--secondary);
+
         border-radius: 50%;
         position: relative;
         padding: 2rem;
+        margin-left: auto;
+        margin-right: auto;
+        margin-top: 0px;
+        + div {
+            > a {
+                text-align: center;
+            }
+            width: 7rem;
+            margin-left: auto;
+            margin-right: auto;
+        }
     }
 
     .pie {
@@ -191,9 +248,9 @@
         width: 100%;
         height: 100%;
         background-image: conic-gradient(
-            red calc((360deg / var(--clock)) * var(--value)),
-            white 0%,
-            white
+            var(--primary) calc((360deg / var(--clock)) * var(--value)),
+            var(--contrast) 0%,
+            var(--contrast)
         );
         border-radius: 50%;
     }
