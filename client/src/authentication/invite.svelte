@@ -23,6 +23,8 @@
     (async () =>
         (isWebauthPlatformAvailable = await fido.isPlatformSupported()))();
 
+        let subtitle:string;
+        $: subtitle =$globalData.isAuthenticated ? 'Recrute new scundrels...':'Be part of your new crew...';
 
     let invite: string | undefined;
     $: checkInvite(invite);
@@ -152,7 +154,7 @@
     }
 </script>
 
-<Frame>
+<Frame {subtitle}>
     {#if error}
         <article class="warning">{error}</article>
     {/if}

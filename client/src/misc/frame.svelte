@@ -7,6 +7,7 @@
     import { flatStore } from "./flatstore";
 
     const data = flatStore(GlobalData.instance);
+    export let subtitle :string;
 
     function theme(t: "light" | "dark" | undefined) {
         console.log(t);
@@ -43,7 +44,7 @@
         <li>
             <hgroup>
                 <h1>Web in the Dark</h1>
-                <h2>The crews clocks...</h2>
+                <h2>{subtitle}</h2>
             </hgroup>
         </li>
     </ul>

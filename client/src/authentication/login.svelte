@@ -40,7 +40,7 @@
     }
 </script>
 
-<Frame>
+<Frame subtitle="Who are you?..">
     <article>
         <header>
             <p>Choose your login method</p>
