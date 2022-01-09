@@ -5,7 +5,7 @@
   "scripts": {
     "build": "tsc",
     "tsc": "tsc",
-    "dev:serv": "nodemon ../dist/index.js  --ignore public",
+    "dev:serv": "nodemon ../dist/index.js  --ignore  --watch dist",
     "dev:build": "tsc -w"
   },
   "devDependencies": {
@@ -20,9 +20,8 @@
     "@types/jsonwebtoken": "^8.5.6",
     "@types/jwk-to-pem": "^2.0.1",
     "@types/livereload": "^0.9.1",
-    "@types/node": "^17.0.7",
+    "@types/node": "^17.0.7",    
     "@types/passport": "^1.0.7",
-    "@types/passport-local": "^1.0.34",
     "@types/pg": "^8.6.3",
     "@types/socket.io": "^3.0.2",
     "@types/socket.io-client": "^3.0.0",

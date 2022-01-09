@@ -1,15 +1,17 @@
 import express, { } from 'express';
 import path from 'path';
-import { QueryResult, Pool } from 'pg';
+import * as db from './db/db';
 import socket from 'socket.io';
 import cookieparser from 'cookie-parser';
 import http from "http";
-import { Authenticated as Authenticated, db_local_login, db_user, generateUser, Init as AuthenticationInit } from './authentication';
+import { Init as AuthenticationInit } from './authentication';
 import session from 'express-session';
 import passport from 'passport';
-import { Strategy } from 'passport-local';
 import flash from 'connect-flash';
-import bcryptr from 'bcryptjs';
+import { clock, generateUser, getUserByLogin } from './db/db';
+import { Authenticated, BladeRouter } from './helper';
+import { deleteClock, getClocks, updateClock } from './db/clock';
+import { decodeBase64 } from 'bcryptjs';
 
 
 
@@ -18,6 +20,7 @@ var env = process.env.NODE_ENV || 'development';
 if (env == "development") {
   require('dotenv').config({ path: '../.env' })
 }
+db.Init();
 
 
 const PORT = process.env.PORT || 5000
@@ -41,17 +44,6 @@ declare global {
 }
 
 
-export const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.SSL == 'false'
-    ? false :
-    process.env.SSL == 'true'
-      ? true
-      : {
-        rejectUnauthorized: false
-      }
-});
-
 if (!process.env.SESSION_SECRET_KEY) {
   throw 'Define env SESSION_SECRET_KEY'
 }
@@ -61,31 +53,28 @@ if (process.env.DEFAULT_USER && process.env.DEFAULT_PASSWORD) {
   const defaultUser = process.env.DEFAULT_USER;
   const defaultPassword = process.env.DEFAULT_PASSWORD;
   (async function () {
+    if (!process.env.DEFAULT_USER)
+      return;
+    const user = await getUserByLogin(process.env.DEFAULT_USER);
+    if (!user) {
 
-    const client = await pool.connect();
-    try {
-      const userQuery = await client.query<db_local_login>('select * from local_login where login = $1;', [process.env.DEFAULT_USER]);
-      if (userQuery.rowCount == 0) {
-        console.info('Generating default user', defaultUser);
-        // no default user create one:
-        await generateUser({
-          name: defaultUser,
-          invite: undefined,
-          authentication: {
-            login: defaultUser,
-            password: defaultPassword
-          }
-        },
-          {
-            ignoreInvite: true
-          });
-
-      }
-    } finally {
-      client.release();
+      console.info('Generating default user', defaultUser);
+      // no default user create one:
+      await generateUser({
+        name: defaultUser,
+        invite: undefined,
+        authentication: {
+          login: defaultUser,
+          password: defaultPassword
+        }
+      },
+        {
+          ignoreInvite: true
+        });
     }
   })();
 }
+
 
 const app = express();
 app.set("port", PORT);
@@ -96,7 +85,7 @@ const io = new socket.Server(httpServer);
 
 if (env == "development") {
 
-  const livereload = require("livereload") ;
+  const livereload = require("livereload");
   const connectLivereload = require("connect-livereload");
   // open livereload high port and start to watch public directory for changes
   const liveReloadServer = livereload.createServer();
@@ -113,48 +102,12 @@ if (env == "development") {
   app.use(connectLivereload());
 }
 
-
 passport.serializeUser((user, done) => {
   done(undefined, user.id);
 })
 passport.deserializeUser((user, done) => {
   done(undefined, { id: user as string });
 })
-
-passport.use('local', new Strategy({ usernameField: 'login' }, async (userid, password, doen) => {
-  const client = await pool.connect();
-  try {
-    const query = await client.query<db_local_login>('select * from local_login where login = $1;', [userid]);
-    if (query.rowCount == 0) {
-      doen('login not found', false);
-      return;
-    }
-    const login = query.rows[0];
-    if (await bcryptr.compare(password, login.password)) {
-      const userQuery = await client.query<db_user>('select * from users where id = $1;', [login.user_id]);
-
-      if (userQuery.rowCount == 0) {
-        doen('user not for login found', false);
-        return;
-      }
-      const user = userQuery.rows[0];
-      doen(undefined, user);
-      return;
-    } else {
-      doen('password incorrect', false);
-      return;
-    }
-
-  } catch (e) {
-    doen(e);
-  }
-  finally {
-    client.release();
-  }
-
-
-}))
-
 app.use(express.static(path.join(__dirname, 'public')))
   .use(cookieparser())
   .use(express.json())
@@ -166,108 +119,37 @@ app.use(express.static(path.join(__dirname, 'public')))
   }))
   .use(passport.initialize())
   .use(passport.session())
-  .use(flash())
-  .put('/clock', Authenticated, async (req, res) => {
-    try {
-      const newEntry = req.body;
-      const client = await pool.connect();
-      try {
+  .use(flash());
+BladeRouter.from(app)
+  .handle('/clock->put', Authenticated, async (input, req) => {
+    console.log(input);
+    
+    const result = await clock.createClock(input.name, input.segments, input.value ?? 0);
+    io.sockets.emit('update_clock', result);
+    return ['success', result];
+  }).handle('/clock->patch', Authenticated, async (input, req) => {
+    console.log('clock input', input)
+    const newEntry = await updateClock(input.id, input.name, input.segments, input.value);
+    if (newEntry) {
 
-        const result = await new Promise<QueryResult<any>>((resolve, reject) => client.query('insert into clocks (name, segments, value) values($1, $2, $3) RETURNING id;', [newEntry.name, makeInt(newEntry.segments), makeInt(newEntry.value)],
-          (err, result) => {
-            if (err)
-              reject(err);
-            else
-              resolve(result);
-          }));
-        res.send(result);
-        io.sockets.emit('update_clock', { id: result.rows[0].id, segments: newEntry.segments, name: newEntry.name, value: newEntry.value });
-      } finally {
-        client.release();
-      }
-    } catch (err) {
-      console.error(err);
-      res.status(500).send("Error " + err);
+      io.sockets.emit('update_clock', { id: newEntry.id, segments: newEntry.segments, name: newEntry.name, value: newEntry.value });
+      return ['success', newEntry];
     }
-  }).patch('/clock', Authenticated, async (req, res) => {
-    try {
-      const newEntry = req.body;
-      if (newEntry.id) {
-        const client = await pool.connect();
-        try {
-          const result = await new Promise((resolve, reject) => client.query('update clocks set name = $1, segments = $2, value = $3where id = $4', [newEntry.name, makeInt(newEntry.segments), makeInt(newEntry.value), makeInt(newEntry.id)],
-            (err, result) => {
-              if (err)
-                reject(err);
-              else
-                resolve(result);
-            }));
-        } finally {
-          client.release();
-        }
-        res.status(200).send({ id: newEntry.id });
-        io.sockets.emit('update_clock', { id: makeInt(newEntry.id), segments: makeInt(newEntry.segments), name: newEntry.name, value: makeInt(newEntry.value) });
+    return ['error', undefined]
 
-      } else {
-        res.status(500).send("ERROR no id");
-      }
-    } catch (err) {
-      console.error(err);
-      res.status(500).send("Error " + err);
-    }
-  }).delete('/clock', Authenticated, async (req, res) => {
-    try {
-      const newEntry = req.body;
-      if (newEntry.id) {
-        const client = await pool.connect();
-        try {
-          const result = await new Promise((resolve, reject) => client.query('delete from clocks where id = $1', [makeInt(newEntry.id)],
-            (err, result) => {
-              if (err)
-                reject(err);
-              else
-                resolve(result);
-            }));
-        } finally {
-          client.release();
-        }
-        res.status(200).send({ id: newEntry.id });
-        io.sockets.emit('delete_clock', { id: newEntry.id });
-      } else {
-        res.status(500).send("ERROR no id");
-      }
-    } catch (err) {
-      console.error(err);
-      res.status(500).send("Error " + err);
-    }
+  }).handle('/clock->delete', Authenticated, async (input, req) => {
+    deleteClock(input.id);
+
+    io.sockets.emit('delete_clock', { id: input.id });
+    return ["success", undefined];
   })
-  .get('/clock', async (req, res) => {
-    try {
-      const client = await pool.connect();
-      let result: QueryResult<any>;
-      try {
-        result = await client.query('SELECT * FROM clocks');
-      } finally {
-        client.release();
-      }
-      res.send((result) ? result.rows : []);
-    } catch (err) {
-      console.error(err);
-      res.status(500).send("Error " + err);
-    }
+  .handle('/clock->get', async (input, req) => {
+    return ['success', await getClocks()];
   })
   ;
 
 AuthenticationInit(app);
 
-function makeInt(value: any) {
-  if (typeof value === "number") {
-    return value;
-  } if (typeof value === "string") {
-    return parseInt(value);
-  }
-  throw `Not correct type ${typeof value} of ${JSON.stringify(value)}`
-}
 
 // start our simple server up on localhost:3000
 const server = httpServer

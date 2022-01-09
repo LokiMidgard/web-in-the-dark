@@ -9,6 +9,8 @@
     const data = flatStore(GlobalData.instance);
     export let subtitle :string;
 
+    export let wide:boolean=false;
+
     function theme(t: "light" | "dark" | undefined) {
         console.log(t);
         if (t) document.querySelector("html").setAttribute("data-theme", t);
@@ -58,7 +60,7 @@
         {/if}
     </ul>
 </nav>
-<main class="container">
+<main class:container={!wide}>
     <slot />
 </main>
 

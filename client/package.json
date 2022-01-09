@@ -15,6 +15,7 @@
     "@rollup/plugin-node-resolve": "^11.0.0",
     "@rollup/plugin-typescript": "^8.0.0",
     "@tsconfig/svelte": "^2.0.0",
+    "@types/express-serve-static-core": "^4.17.13",
     "@types/socket.io": "^3.0.2",
     "@types/socket.io-client": "^3.0.0",
     "blade-common": "^1.0.0",

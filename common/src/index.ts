@@ -1,3 +1,7 @@
+// export * as Errors from './Exceptions';
+export * as data from './data';
+import * as data from './data';
+
 export interface RegsiterAccount<T extends Login | WebAuthN = Login | WebAuthN> {
     name: string,
     invite: string | undefined,
@@ -35,9 +39,6 @@ export interface WebAuthN {
 
 
 
-export interface CheckLogin {
-    login: string
-}
 
 export interface isAuthenticated {
     isAuthenticated: boolean;
@@ -56,3 +57,6 @@ export function isWebAuthN(obj: any): obj is WebAuthN {
         && typeof obj.clientDataJSON === "string"
         && typeof obj.attestationObject === "string")
 }
+
+
+

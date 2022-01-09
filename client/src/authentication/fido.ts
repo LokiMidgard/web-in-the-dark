@@ -73,7 +73,7 @@ export async function isPlatformSupported() {
  * @param {ArrayBuffer} challenge challenge to use
  * @return {any} server response object
  */
-export async function createCredential(challenge: string, userId: string, attachment: attachment, invite: string, userName: string) {
+export async function createCredential(challenge: string, userId: string, attachment: attachment, invite: string, userName: string, comment: string) {
     if (!PublicKeyCredential || typeof PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable !== "function")
         return Promise.reject("WebAuthn APIs are not available on this user agent.");
 
@@ -135,7 +135,7 @@ export async function createCredential(challenge: string, userId: string, attach
         authentication: attestation
     }
 
-    const response = await sendServer<common.RegsiterAccount<common.WebAuthN>, void>("/auth/webauth/register", "post", send);
+    const response = await sendServer("/auth/webauth/register->post", { ...send, comment: comment });
 
     return response;
 
@@ -188,7 +188,7 @@ export async function getAssertion(challenge: string) {
         authenticatorData: base64encode(rawAssertion.response.authenticatorData)
     };
 
-    const response = await sendServer("/auth/webauth/login", "post", assertion);
+    const response = await sendServer("/auth/webauth/login->post", assertion);
     return response;
 }
 

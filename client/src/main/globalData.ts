@@ -18,11 +18,15 @@ export class GlobalData {
             GlobalData._instance = new GlobalData();
             (async () => {
                 try {
-                    const result = await sendServer<void, isAuthenticated>(
-                        "/auth/isAuthenticated",
-                        "get"
+                    console.log('get Data')
+                    const result = await sendServer(
+                        "/auth/isAuthenticated->get", undefined
                     );
-                    GlobalData._instance.result.set(result);
+                    if (result.successs)
+                        GlobalData._instance.result.set(result);
+                    else
+                        console.error(`Could not get authentication data${JSON.stringify(result)}`);
+
                 } catch (e) {
                     console.error(e)
                 }

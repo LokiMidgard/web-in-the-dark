@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { Login, CheckLogin, isAuthenticated } from "blade-common";
+    import type { Login, isAuthenticated } from "blade-common";
     import * as fido from "./fido";
     import Frame from "./../misc/frame.svelte";
 
@@ -23,8 +23,10 @@
     (async () =>
         (isWebauthPlatformAvailable = await fido.isPlatformSupported()))();
 
-        let subtitle:string;
-        $: subtitle =$globalData.isAuthenticated ? 'Recrute new scundrels...':'Be part of your new crew...';
+    let subtitle: string;
+    $: subtitle = $globalData.isAuthenticated
+        ? "Recrute new scundrels..."
+        : "Be part of your new crew...";
 
     let invite: string | undefined;
     $: checkInvite(invite);
@@ -35,22 +37,21 @@
 
     async function checkInvite(i: string | undefined) {
         if (i) {
-            try {
-                error = undefined;
-                const data = await sendServer<
-                    { invite: string },
-                    { granted_by: string; validUntill: string }
-                >("/auth/invite/validate", "post", { invite: i });
+            error = undefined;
+            const data = await sendServer("/auth/invite/validate->post", {
+                invite: i,
+            });
 
+            if (data.successs) {
                 validUntill = new Date(Date.parse(data.validUntill));
                 inviter = data.granted_by;
-            } catch (e) {
+            } else if (data.status == 404) {
                 validUntill = undefined;
                 invite = undefined;
                 error =
-                    e.status == 404
+                    data.status == 404
                         ? "Invite not valid, maybe expired"
-                        : e.toString();
+                        : data.toString();
             }
         } else {
             validUntill = undefined;
@@ -65,6 +66,7 @@
     let name: string | undefined;
     let password: string | undefined;
     let login: string | undefined;
+    let comment: string | undefined;
 
     let loginAvailable = true;
     $: checkLogin(login);
@@ -76,23 +78,23 @@
             loginLoding = false;
         } else {
             loginLoding = true;
-            const data: CheckLogin = {
-                login: newLogin,
-            };
 
             await delay(1000);
 
-            if (data.login != login) return;
+            if (newLogin != login) return;
 
-            const result = await fetch("/auth/password/check", {
-                method: "post",
-                body: JSON.stringify(data),
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            });
+            const response = await sendServer(
+                "/auth/password/check/:login->get",
+                { login: newLogin }
+            );
 
-            loginAvailable = result.status == 404;
+            if (response.successs) {
+                loginAvailable = !response.found;
+            } else {
+                console.error(response);
+                loginAvailable = false;
+            }
+
             //this is not an an try finaly intentionaly
             loginLoding = false;
         }
@@ -124,32 +126,32 @@
     }
     let inviteLink: string | undefined;
     async function generateInvite() {
-        const responst = await sendServer<
-            void,
-            { link: string; validUntill: string }
-        >("/auth/invite", "get");
-
-        inviteLink = responst.link;
-        validUntill = new Date(Date.parse(responst.validUntill));
+        const responst = await sendServer("/auth/invite->get", undefined);
+        if (responst.successs) {
+            inviteLink = responst.link;
+            validUntill = new Date(Date.parse(responst.validUntill));
+        } else {
+            throw responst;
+        }
     }
 
     async function RegisterWebAuthN(attachment: fido.attachment) {
-        try {
-            const registration = await sendServer<
-                void,
-                { challenge: string; id: string }
-            >("/auth/webauth/challenge", "get");
-
+        const registration = await sendServer(
+            "/auth/webauth/challenge->get",
+            undefined
+        );
+        if (registration.successs) {
             await fido.createCredential(
                 registration.challenge,
                 registration.id,
                 attachment,
                 invite,
-                name
+                name,
+                comment
             );
             window.location.assign("/");
-        } catch (error) {
-            console.error(error);
+        } else {
+            console.error(registration);
         }
     }
 </script>
@@ -290,9 +292,13 @@
                             </p>
                         {/if}
                     {:else if selectedAuthentication == "webauthN-device"}
+                        <input
+                            bind:value={comment}
+                            placeholder="Name your device..."
+                        />
                         <button
                             on:click={() => RegisterWebAuthN("platform")}
-                            disabled={loding || !name}
+                            disabled={loding || !name || !comment}
                             >Register Using Device</button
                         >
                         <p>
@@ -305,9 +311,13 @@
                             So you can't use this account on another device
                         </p>
                     {:else if selectedAuthentication == "webauthN-key"}
+                        <input
+                            bind:value={comment}
+                            placeholder="Name your key..."
+                        />
                         <button
                             on:click={() => RegisterWebAuthN("cross-platform")}
-                            disabled={loding || !name}
+                            disabled={loding || !name || !comment}
                             >Register Using Securety Key</button
                         >
                         <p>
@@ -332,7 +342,7 @@
     .warning {
         border: var(--form-element-invalid-border-color) 1px solid;
     }
-    article:empty{
+    article:empty {
         display: none;
     }
 </style>

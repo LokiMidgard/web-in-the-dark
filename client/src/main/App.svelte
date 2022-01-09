@@ -7,7 +7,7 @@
 	$: subtitle = "Your crews clocks...";
 </script>
 
-<Frame {subtitle}>
+<Frame {subtitle} wide>
 	<ClocksGrid />
 </Frame>
 

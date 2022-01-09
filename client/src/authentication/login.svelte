@@ -26,16 +26,15 @@
     }
 
     async function webauthLogin() {
-        try {
-            const registration = await sendServer<
-                void,
-                { challenge: string; id: string }
-            >("/auth/webauth/challenge", "get");
-
+        const registration = await sendServer(
+            "/auth/webauth/challenge->get",
+            undefined
+        );
+        if (registration.successs) {
             await fido.getAssertion(registration.challenge);
             window.location.assign("/");
-        } catch (error) {
-            console.error(error);
+        } else {
+            console.error(registration);
         }
     }
 </script>

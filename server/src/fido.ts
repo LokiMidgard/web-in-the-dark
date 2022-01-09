@@ -6,8 +6,9 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import url from 'url';
 import * as common from 'blade-common';
-import { db_webauth_login, generateUser } from './authentication';
-import { pool } from '.';
+// import { db_webauth_login, generateUser } from './authentication';
+import { Assertion } from 'blade-common/src/webauth';
+import { generateUser, generateWebAuth, getWebAuth, updateWebAuth } from './db/db';
 
 // import storage from './storage.js';
 
@@ -37,7 +38,7 @@ interface Attestation {
  * Creates a FIDO credential and stores it
  * @param {any} attestation AuthenticatorAttestationResponse received from client
  */
-export async function makeCredential(input: common.RegsiterAccount<common.WebAuthN> | common.WebAuthN, userId?: string): Promise<string> {
+export async function makeCredential(input: common.RegsiterAccount<common.WebAuthN> | common.WebAuthN, comment: string, userId?: string): Promise<string> {
 
     const registerAccount = common.isWebAuthN(input)
         ? undefined
@@ -118,15 +119,10 @@ export async function makeCredential(input: common.RegsiterAccount<common.WebAut
         const user = await generateUser({ ...registerAccount, ...credential });
         return user.id;
     } else if (userId) {
-        const client = await pool.connect();
-        try {
-            await client.query('insert into webauth_login (user_id, id, publicKeyJwk, signCount, comment) values($1, $2, $3, $4, $5);', [userId, credential.id, credential.publicKeyJwk, credential.signCount, "to fill"]);
-        } finally {
-            client.release();
-        }
+        await generateWebAuth(userId, credential.id, credential.publicKeyJwk, credential.signCount, comment)
         return userId;
     }
-    else{
+    else {
         throw 'Ivalid State'
     }
 };
@@ -137,13 +133,6 @@ export interface WebauthLogin {
     signCount: number
 }
 
-interface Assertion {
-    id: string,
-    clientDataJSON: string,
-    authenticatorData: string,
-    signature: string,
-
-}
 /**
  * Verifies a FIDO assertion
  * @param {any} assertion AuthenticatorAssertionResponse received from client
@@ -157,23 +146,9 @@ export async function verifyAssertion(assertion: Assertion) {
 
     // Step 3: Using credential’s id attribute look up the corresponding
     // credential public key.
-    let credential: db_webauth_login;
 
-    {
-        console.log('Try to search entry with id ', assertion.id);
-        const client = await pool.connect();
-        try {
-            const query = await client.query<db_webauth_login>('select * from webauth_login where id = $1 limit 1;', [assertion.id]);
-            if (query.rowCount == 0) {
-                throw new Error("Could not find credential with that ID");
-            }
-            credential = query.rows[0];
-            console.log('found ', credential);
-
-        } finally {
-            client.release();
-        }
-    }
+    console.log('Try to search entry with id ', assertion.id);
+    const credential = await getWebAuth(assertion.id);
 
     const publicKey = credential.publickeyjwk;
     if (!publicKey)
@@ -244,18 +219,10 @@ export async function verifyAssertion(assertion: Assertion) {
     }
 
     //Update signCount
-    {
-        console.log('updateing the entry')
-        const client = await pool.connect();
-        try {
-            await client.query<any>('update webauth_login set signcount = $2  where id = $1;', [credential.id, authenticatorData.signCount]);
-        } finally {
-            client.release();
-        }
-    }
-    return credential.user_id;
+    console.log('updateing the entry')
+    updateWebAuth(credential.id, authenticatorData.signCount);
     //Return credential object that was verified
-    // return credential;
+    return credential.user_id;
 };
 
 export interface AuthenticationData {
