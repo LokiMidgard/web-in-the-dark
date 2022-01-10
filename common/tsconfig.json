@@ -8,6 +8,11 @@
     "outDir": "lib",
     "tsBuildInfoFile": "lib/.tsbuildinfo",
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "emitDecoratorMetadata": true,
+    "plugins": [
+      {
+        "transform": "typescript-is/lib/transform-inline/transformer"
+      }
+    ]
   }
 }

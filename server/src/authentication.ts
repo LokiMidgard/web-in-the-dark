@@ -10,11 +10,7 @@ import * as db from './db/db'
 import { randomUUID } from 'crypto';
 
 import { generateUser } from './db/db';
-import { Authenticated, BladeRouter, NotAuthenticated } from './helper';
-
-const cache = new NodeCache();
-
-
+import { BladeRouter, NotAuthenticated } from './helper';
 
 
 
@@ -102,11 +98,11 @@ export function Init(app: ExpressCore) {
 
 
 
-        .handle('/auth/logout->post', Authenticated, (input, req) => {
+        .handle('/auth/logout->post', (input, req) => {
             req.logOut();
             return ['success', undefined]
         })
-        .handle('/auth/invite->get', Authenticated, async (input, req) => {
+        .handle('/auth/invite->get', async (input, req) => {
             const invite = await db.generateInvite(req.user!.id);
             return ['success', {
                 link: `${process.env.URL}invite.html#${invite.id}`,

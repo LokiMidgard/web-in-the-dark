@@ -9,7 +9,7 @@ import session from 'express-session';
 import passport from 'passport';
 import flash from 'connect-flash';
 import { clock, generateUser, getUserByLogin } from './db/db';
-import { Authenticated, BladeRouter } from './helper';
+import { BladeRouter } from './helper';
 import { deleteClock, getClocks, updateClock } from './db/clock';
 import { decodeBase64 } from 'bcryptjs';
 
@@ -121,13 +121,13 @@ app.use(express.static(path.join(__dirname, 'public')))
   .use(passport.session())
   .use(flash());
 BladeRouter.from(app)
-  .handle('/clock->put', Authenticated, async (input, req) => {
+  .handle('/clock->put', async (input, req) => {
     console.log(input);
-    
+
     const result = await clock.createClock(input.name, input.segments, input.value ?? 0);
     io.sockets.emit('update_clock', result);
     return ['success', result];
-  }).handle('/clock->patch', Authenticated, async (input, req) => {
+  }).handle('/clock->patch', async (input, req) => {
     console.log('clock input', input)
     const newEntry = await updateClock(input.id, input.name, input.segments, input.value);
     if (newEntry) {
@@ -137,7 +137,7 @@ BladeRouter.from(app)
     }
     return ['error', undefined]
 
-  }).handle('/clock->delete', Authenticated, async (input, req) => {
+  }).handle('/clock->delete', async (input, req) => {
     deleteClock(input.id);
 
     io.sockets.emit('delete_clock', { id: input.id });

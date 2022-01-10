@@ -3,11 +3,11 @@
 BEGIN;
 
 
-CREATE TABLE IF NOT EXISTS public."Group_Players"
+CREATE TABLE IF NOT EXISTS public."Group_Player"
 (
-    "Groups_id" integer NOT NULL,
+    "Group_id" integer NOT NULL,
     user_id uuid NOT NULL,
-    PRIMARY KEY ("Groups_id", user_id)
+    PRIMARY KEY ("Group_id", user_id)
 );
 
 CREATE TABLE IF NOT EXISTS public."Groups"
@@ -322,15 +322,15 @@ CREATE TABLE IF NOT EXISTS public.webauth_login
     PRIMARY KEY (user_id)
 );
 
-ALTER TABLE IF EXISTS public."Group_Players"
-    ADD CONSTRAINT "Group_Players_Groups_id_fkey" FOREIGN KEY ("Groups_id")
+ALTER TABLE IF EXISTS public."Group_Player"
+    ADD CONSTRAINT "Group_Players_Groups_id_fkey" FOREIGN KEY ("Group_id")
     REFERENCES public."Groups" (id) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE NO ACTION
     NOT VALID;
 
 
-ALTER TABLE IF EXISTS public."Group_Players"
+ALTER TABLE IF EXISTS public."Group_Player"
     ADD CONSTRAINT "Group_Players_user_id_fkey" FOREIGN KEY (user_id)
     REFERENCES public.users (id) MATCH SIMPLE
     ON UPDATE NO ACTION

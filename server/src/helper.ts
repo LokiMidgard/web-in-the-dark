@@ -9,7 +9,10 @@ type returnSuccess = 'success';
 type returnError = 'error' | 'not found' | 'authentication required' | 'forbidden';
 type returnStatus = returnSuccess | returnError;
 type returnArray<Connection extends data.Connections.Connections> = [returnSuccess, data.Result<Connection>] | [returnError, data.Error<Connection>];
-type callbackFunction<Connection extends data.Connections.Connections> = (input: data.Input<Connection>, req: Request<data.InputPath<Connection>, data.Result<Connection> | data.Error<Connection>, data.InputBody<Connection>>) => Promise<returnArray<Connection> | 'skip'> | returnArray<Connection> | 'skip'
+type callbackFunction<Connection extends data.Connections.Connections> = (input: callbackInput<Connection>, req: Request<data.InputPath<Connection>, data.Result<Connection> | data.Error<Connection>, data.InputBody<Connection>>) => Promise<returnArray<Connection> | 'skip'> | returnArray<Connection> | 'skip'
+type callbackInput<Connection extends data.Connections.Connections> = data.NeedsAuthentication<Connection> extends true
+    ? data.Input<Connection> & { authenticatedUserId: string }
+    : data.Input<Connection>
 
 export class BladeRouter {
     private app: ExpressCore;
@@ -27,10 +30,21 @@ app:ExpressCore     */
     public handle<Conection extends data.Connections.Connections>(connection: Conection, ...callbacks: callbackFunction<Conection>[]) {
         const [path, method] = data.deconstruct(connection);
 
+        if (data.needsAuthentication(path)) {
+            callbacks = [Authenticated, ...callbacks];
+        }
+
+
         const transformed = callbacks.map(callback => {
             const c: RequestHandler<data.InputPath<Conection>, data.Result<Conection> | data.Error<Conection>, data.InputBody<Conection>> = async (req, res, next) => {
 
-                var input = { ...req.body, ...req.params };
+
+                let input: callbackInput<Conection>;
+                if (data.needsAuthentication(path)) {
+                    input = { ...req.body, ...req.params, authenticatedUserId: req.user!.id }
+                } else {
+                    input = { ...req.body, ...req.params } as callbackInput<Conection>;
+                }
                 let retunrValue;
                 try {
 
@@ -70,6 +84,7 @@ app:ExpressCore     */
             };
             return c;
         })
+
 
         this.app[method](path, transformed);
         return this;

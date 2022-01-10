@@ -5,7 +5,7 @@
   "description": "",
   "main": "lib/index.js",
   "scripts": {
-    "generate": "node scripts/generate.mjs",
+    "generate": "ts-node scripts/generate.ts",
     "build": "npm run generate && tsc",
     "test": "echo \"T.B.D.\""
   },
@@ -13,10 +13,13 @@
   "keywords": [],
   "license": "MIT",
   "dependencies": {
-    "@types/node": "^16.0.0"
+    "@types/node": "^16.0.0",
+    "type-fest": "^2.9.0"
   },
   "devDependencies": {
     "@types/express-serve-static-core": "^4.17.13",
+    "ts-morph": "^13.0.2",
+    "ts-node": "^10.4.0",
     "typescript": "^4.5.4"
   }
 }

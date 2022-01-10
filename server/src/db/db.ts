@@ -1,5 +1,6 @@
 import * as fido from "../fido";
 export * as clock from './clock'
+export * as group from './group'
 
 import { randomUUID } from 'crypto';
 import { QueryResult, Pool } from 'pg';
@@ -18,6 +19,7 @@ let initPool: (p: Pool) => void;
 let pool: Promise<Pool> = new Promise<Pool>(resolve => {
     initPool = resolve;
 });
+
 
 export function Init() {
     const pool = new Pool({

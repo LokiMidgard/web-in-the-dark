@@ -5,7 +5,7 @@
   "scripts": {
     "build": "tsc",
     "tsc": "tsc",
-    "dev:serv": "nodemon ../dist/index.js  --ignore  --watch dist",
+    "dev:serv": "nodemon ../dist/index.js  --watch ../dist --ignore  ../dist/public",
     "dev:build": "tsc -w"
   },
   "devDependencies": {
