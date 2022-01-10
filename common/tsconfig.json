@@ -14,5 +14,9 @@
         "transform": "typescript-is/lib/transform-inline/transformer"
       }
     ]
-  }
+    
+  },
+  "exclude": [
+    "scripts"
+  ]
 }

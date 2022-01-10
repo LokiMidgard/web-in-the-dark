@@ -74,33 +74,37 @@ async function work() {
 
 
     // initialize
-    const project = new Project({
-        // Optionally specify compiler options, tsconfig.json, in-memory file system, and more here.
-        // If you initialize with a tsconfig.json, then it will automatically populate the project
-        // with the associated source files.
-        // Read more: https://ts-morph.com/setup/
-    });
+    // const project = new Project({
+    //     // Optionally specify compiler options, tsconfig.json, in-memory file system, and more here.
+    //     // If you initialize with a tsconfig.json, then it will automatically populate the project
+    //     // with the associated source files.
+    //     // Read more: https://ts-morph.com/setup/
+    //     compilerOptions: {
 
-    // add source files
-    project.addSourceFilesAtPaths("src/**/*.ts");
+    //     },
+    //     useInMemoryFileSystem: true
+    // });
 
-
-    function Test(path: string) {
-
-        const dataFile = project.createSourceFile(`src/${randomUUID()}.ts`, `import * as x from "./data" ; const check = x.needsAuthentication("${path}")`);
-        const declaraiton = dataFile.getVariableDeclarationOrThrow('check');
-        const result = project.getTypeChecker().getTypeText(declaraiton.getType());
-        return result.toLowerCase() == 'true';
-    }
+    // // add source files
+    // project.addSourceFilesAtPaths("src/**/*.ts");
 
 
-    const pathChecks = paths.map(x => [x, Test(x)]).reduce((p: any, v: any) => {
-        p[v[0]] = v[1];
-        return p;
-    }, {});
+    // function Test(path: string) {
 
-    let authenticationText = `export const lookup = ${JSON.stringify(pathChecks)} as const;`
-    await fs.writeFile('src/data-authentication.g.ts', authenticationText);
+    //     const dataFile = project.createSourceFile(`src/${randomUUID()}.ts`, `import * as x from "./data" ; const check = x.needsAuthentication("${path}")`);
+    //     const declaraiton = dataFile.getVariableDeclarationOrThrow('check');
+    //     const result = project.getTypeChecker().getTypeText(declaraiton.getType());
+    //     return result.toLowerCase() == 'true';
+    // }
+
+
+    // const pathChecks = paths.map(x => [x, Test(x)]).reduce((p: any, v: any) => {
+    //     p[v[0]] = v[1];
+    //     return p;
+    // }, {});
+
+    // let authenticationText = `export const lookup = ${JSON.stringify(pathChecks)} as const;`
+    // await fs.writeFile('src/data-authentication.g.ts', authenticationText);
 
 }
 
