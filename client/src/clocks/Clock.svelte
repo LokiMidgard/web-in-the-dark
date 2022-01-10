@@ -162,8 +162,8 @@
         </div>
         {#if editable}
             <div class="grid">
-                <a href="#non" on:click={() => change(1)}>+</a>
                 <a href="#non" on:click={() => change(-1)}>-</a>
+                <a href="#non" on:click={() => change(1)}>+</a>
             </div>
         {/if}
     </header>
@@ -177,8 +177,8 @@
 
                 <h6>Segments {segments}</h6>
                 <div class="grid">
-                    <button on:click={() => changeSegments(1)}>+</button>
                     <button on:click={() => changeSegments(-1)}>-</button>
+                    <button on:click={() => changeSegments(1)}>+</button>
                 </div>
                 <button
                     class:outline={!shouldDelete}
