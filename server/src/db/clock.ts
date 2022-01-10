@@ -21,23 +21,23 @@ export async function updateClock(id: number, name?: string, segments?: number, 
         let index = 1;
         let values = [];
         let insertString = ''
-        if (name) {
-            if(index>1)
-            insertString+=', '
+        if (name != undefined) {
+            if (index > 1)
+                insertString += ', '
             values.push(name);
             insertString += ` name = $${index}`;
             index++;
         }
-        if (segments) {
-            if(index>1)
-            insertString+=', '
+        if (segments != undefined) {
+            if (index > 1)
+                insertString += ', '
             values.push(segments);
             insertString += ` segments = $${index}`;
             index++;
         }
-        if (value) {
-            if(index>1)
-            insertString+=', '
+        if (value != undefined) {
+            if (index > 1)
+                insertString += ', '
             values.push(value);
             insertString += ` value = $${index}`;
             index++;
