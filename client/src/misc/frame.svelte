@@ -21,11 +21,36 @@
         await sendServer("/auth/logout->post", undefined);
         await $data.updateState();
     }
+    let groupName: string | undefined;
+    async function createGroup() {
+        const promise = sendServer("/groups->put", { name: groupName });
+        groupName = undefined;
+        await promise;
+    }
 </script>
 
 <nav>
     <ul>
-        <li>
+        {#if $data.isAuthenticated}
+            <li>
+                <select>
+                    {#each $data.groups as group}
+                        <option value={group.id}>
+                            {group.name}
+                        </option>
+                    {/each}
+                </select>
+            </li>
+            <li>
+                <div class="grid">
+                    <input type="text" bind:value={groupName} />
+                    <button disabled={!groupName} on:click={createGroup}
+                        >Create Group</button
+                    >
+                </div>
+            </li>
+        {/if}
+        <!-- <li>
             <a
                 href="#non"
                 on:click={() => theme(undefined)}
@@ -45,7 +70,7 @@
                 class="contrast"
                 data-theme-switcher="dark"><small>Dark</small></a
             >
-        </li>
+        </li> -->
     </ul>
     <ul>
         <li>

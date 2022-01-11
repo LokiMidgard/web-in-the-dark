@@ -41,7 +41,7 @@ app:ExpressCore     */
             const c: RequestHandler<ExpressRouteParameters<data.Path<Conection>>, data.Result<Conection> | data.Error<Conection>, data.InputBody<Conection>> = async (req, res, next) => {
 
                 const input: callbackInput<Conection> =
-                    data.needsAuthentication(path)
+                    data.needsAuthentication(connection)
                         ? { ...req.body, ...data.transformRouteParameters(connection, req.params), authenticatedUserId: req.user!.id }
                         : { ...req.body, ...data.transformRouteParameters(connection, req.params) } as callbackInput<Conection>;
 

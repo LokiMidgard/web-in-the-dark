@@ -1,6 +1,6 @@
 import { Express as ExpressCore } from 'express-serve-static-core';
 import { getUser } from '../db/db';
-import { addPlayer, createGroup, deleteGroup, getGroup, getPlayerGroups, getPlayers, removePlayer } from '../db/group';
+import { addPlayer, createGroup, deleteGroup, getGroup, getGroups, getPlayerGroups, getPlayers, removePlayer } from '../db/group';
 import { BladeRouter, callbackFunction, callbackInput } from '../helper';
 import { data } from 'blade-common';
 
@@ -9,7 +9,7 @@ import { data } from 'blade-common';
 export function Init(app: ExpressCore) {
     BladeRouter.from(app)
         .handle('/groups/my->get', async (input) => {
-            const groups = await getPlayerGroups(input.authenticatedUserId);
+            const groups = await getGroups(input.authenticatedUserId);
             return ["success", await Promise.all(groups.map(async x => {
                 const gm = await getUser(x.gm);
                 if (!gm)
@@ -21,6 +21,7 @@ export function Init(app: ExpressCore) {
             }))];
         })
         .handle('/groups->put', async (input) => {
+            console.log(input)
             const group = await createGroup(input.name, input.authenticatedUserId);
             const me = await getUser(input.authenticatedUserId);
             if (!me)

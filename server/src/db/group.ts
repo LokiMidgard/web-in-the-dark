@@ -7,7 +7,7 @@ export interface db_group { id: number, name: string, gm: string }
 export async function createGroup(name: string, gmUserId: string): Promise<db_group> {
     const connection = await poolConnect();
     try {
-        const groupresult = await connection.query<db_group>('insert into group (name, gm) values ($1, $2) returning id, name, gm', [name, gmUserId]);
+        const groupresult = await connection.query<db_group>('insert into groups (name, gm) values ($1, $2) returning id, name, gm', [name, gmUserId]);
         return groupresult.rows[0];
     } finally {
         connection.release();
@@ -16,7 +16,7 @@ export async function createGroup(name: string, gmUserId: string): Promise<db_gr
 export async function deleteGroup(id: number, gm_id: string) {
     const connection = await poolConnect();
     try {
-        const groupresult = await connection.query('delete from group where id = $1 and gm = $2', [id, gm_id]);
+        const groupresult = await connection.query('delete from groups where id = $1 and gm = $2', [id, gm_id]);
         if (groupresult.rowCount == 0)
             return false;
         return true;
@@ -27,7 +27,7 @@ export async function deleteGroup(id: number, gm_id: string) {
 export async function getGroup(id: number): Promise<db_group | undefined> {
     const connection = await poolConnect();
     try {
-        const groupresult = await connection.query<db_group>('select * from  group where id = $1', [id]);
+        const groupresult = await connection.query<db_group>('select * from  groups where id = $1', [id]);
         return groupresult.rows[0];
     } finally {
         connection.release();
@@ -71,7 +71,7 @@ export async function getGroups(userId: string): Promise<db_group[]> {
 export async function getGmGroups(userId: string): Promise<db_group[]> {
     const connection = await poolConnect();
     try {
-        const players = await connection.query<db_group>('select id, name, gm from groups join group_Player on grups.id = group_player.group_id where group_player.user_id = $1', [userId]);
+        const players = await connection.query<db_group>('select id, name, gm from groups where gm = $1', [userId]);
         return players.rows;
     } finally {
         connection.release();
@@ -81,7 +81,7 @@ export async function getGmGroups(userId: string): Promise<db_group[]> {
 export async function getPlayerGroups(userId: string): Promise<db_group[]> {
     const connection = await poolConnect();
     try {
-        const players = await connection.query<db_group>('select id, name, gm from groups join group_Player on grups.id = group_player.group_id where group_player.user_id = $1', [userId]);
+        const players = await connection.query<db_group>('select id, name, gm from groups join group_Player on groups.id = group_player.group_id where group_player.user_id = $1', [userId]);
         return players.rows;
     } finally {
         connection.release();

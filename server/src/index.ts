@@ -5,6 +5,7 @@ import socket from 'socket.io';
 import cookieparser from 'cookie-parser';
 import http from "http";
 import { Init as AuthenticationInit } from './authentication';
+import { Init as GroupInit } from './routes/group';
 import session from 'express-session';
 import passport from 'passport';
 import flash from 'connect-flash';
@@ -149,7 +150,7 @@ BladeRouter.from(app)
   ;
 
 AuthenticationInit(app);
-
+GroupInit(app)
 
 // start our simple server up on localhost:3000
 const server = httpServer

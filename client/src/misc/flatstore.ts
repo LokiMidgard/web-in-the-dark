@@ -3,7 +3,12 @@ import { get, readable, Readable, Writable, writable } from "svelte/store";
 
 export type NoStore<T> = T extends Readable<infer T2>
     ? NoStoreParameter<T2>
-    : NoStoreParameter<T>;
+    : T extends any[]
+    ? NoStore<T[number]>[]
+    : T extends {}
+    ? NoStoreParameter<T>
+    : T;
+
 
 
 type ExtractType<TProperty, TType, TExtends> = TType extends TExtends ? TProperty : never;
@@ -21,6 +26,8 @@ type NoStoreParameter<T> =
         ? T[Property]
         : T[Property] extends Readable<infer Args>
         ? NoStore<Args>
+        : T[Property] extends any[]
+        ? T[Property]
         : NoStore<T[Property]>
     }
 
@@ -108,6 +115,8 @@ function mapStoreInternal<T>(source: T, callbacks?: { update: () => void, onDest
 
 function getAllFuncs(toCheck) {
     const props: string[] = [];
+    if (!toCheck)
+        return props;
     let obj = toCheck;
     do {
         props.push(...Object.getOwnPropertyNames(obj));

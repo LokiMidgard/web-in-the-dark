@@ -74,14 +74,14 @@ export type RouteParameters<Route extends string> = string extends Route
         ? RouteParameters<Next> : unknown)
     : {};
 
-type User = {
+export type User = {
     name: string,
     id: string,
     granted_by: string,
 }
-type Group = {
-    name: string,
-    id: number,
+export interface Group  {
+    name: string
+    id: number
     gm: User
 }
 
