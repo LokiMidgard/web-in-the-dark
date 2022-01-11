@@ -24,7 +24,7 @@ export async function deleteGroup(id: number, gm_id: string) {
         connection.release();
     }
 }
-export async function getGroup(id: number): Promise<db_group> {
+export async function getGroup(id: number): Promise<db_group | undefined> {
     const connection = await poolConnect();
     try {
         const groupresult = await connection.query<db_group>('select * from  group where id = $1', [id]);
@@ -34,29 +34,31 @@ export async function getGroup(id: number): Promise<db_group> {
     }
 }
 
-export async function addPlayer(groupId: string, playerid: string): Promise<void> {
+export async function addPlayer(groupId: number, playerid: string): Promise<boolean> {
     const connection = await poolConnect();
     try {
-        await connection.query<db_group>('insert into group_player (group_id, player_id) values ($1, $2)', [groupId, playerid]);
+        const result = await connection.query<db_group>('insert into group_player (group_id, player_id) values ($1, $2)', [groupId, playerid]);
+        return result.rowCount > 0;
     } finally {
         connection.release();
     }
 }
 
-export async function removePlayer(groupId: string, playerid: string): Promise<void> {
+export async function removePlayer(groupId: number, playerid: string): Promise<boolean> {
     const connection = await poolConnect();
     try {
-        await connection.query<db_group>('delete from group_player where group_id = $1 and player_id = $2', [groupId, playerid]);
+        const result = await connection.query<db_group>('delete from group_player where group_id = $1 and player_id = $2', [groupId, playerid]);
+        return result.rowCount > 0;
     } finally {
         connection.release();
     }
 }
 
-export async function getPlayers(groupId: string): Promise<db_user[]> {
+export async function getPlayers(groupId: number): Promise<db_user[]> {
     const connection = await poolConnect();
     try {
         const players = await connection.query<db_user>('select id, name, granted_by from users join group_Player on users.id = group_player.user_id where group_player.group_id = $1', [groupId]);
-        return players.rows;
+        return players.rows ?? [];
     } finally {
         connection.release();
     }

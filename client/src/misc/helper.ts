@@ -1,6 +1,4 @@
-import type * as express from 'express-serve-static-core'
 import { data } from 'blade-common'
-import type { Options } from 'body-parser';
 
 
 
@@ -74,7 +72,7 @@ type combine<T1, T2> = T1 extends void
 
 
 
-type input<Conection extends data.Connections.Connections> = notEmpty<combine<data.InputBody<Conection>, express.RouteParameters<Conection>>>;
+type input<Conection extends data.Connections.Connections> = notEmpty<combine<data.InputBody<Conection>, data.RouteParameters<Conection>>>;
 
 // type RouteParameters<Conection extends data.Connections> = express.RouteParameters<Conection> extends {} ?
 // express.RouteParameters<Conection>

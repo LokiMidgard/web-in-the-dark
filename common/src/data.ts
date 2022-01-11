@@ -10,7 +10,7 @@ export * as Connections from "./data.g"
 
 
 export type InputBody<TPath extends Connections> = def<TPath>['input'];
-export type InputPath<TPath extends Connections> = express.RouteParameters<TPath>;
+export type InputPath<TPath extends Connections> = RouteParameters<Path<TPath>>;
 export type Input<TPath extends Connections> = InputBody<TPath> & InputPath<TPath>;
 
 
@@ -35,6 +35,45 @@ export function needsAuthentication<T extends Connections>(test: T): NeedsAuthen
 
 
 
+type RemoveTail<S extends string, Tail extends string> = S extends `${infer P}${Tail}` ? P : S;
+type GetRouteParameter<S extends string> = RemoveTail<
+    RemoveTail<RemoveTail<S, `/${string}`>, `-${string}`>,
+    `.${string}`
+>;
+
+type ExtractName<S extends string> = S extends `${infer P}:${string}`
+    ? P
+    : S;
+type ExtractType<S extends string> = S extends `${string}:${infer T}`
+    ? T extends 'string'
+    ? string
+    : T extends 'number'
+    ? number
+    : T extends 'bool'
+    ? boolean
+    : T extends 'boolean'
+    ? boolean
+    : never
+    : string;
+
+
+// prettier-ignore
+export type RouteParameters<Route extends string> = string extends Route
+    ? {}
+    : Route extends `${string}(${string}`
+    ? {} //TODO: handling for regex parameters
+    : Route extends `${string}:${infer Rest}`
+    ? (
+        GetRouteParameter<Rest> extends never
+        ? {}
+        : GetRouteParameter<Rest> extends `${infer ParamName}?`
+        ? { [P in ExtractName<ParamName>]?: ExtractType<ParamName> }
+        : { [P in ExtractName<GetRouteParameter<Rest>>]: ExtractType<GetRouteParameter<Rest>> }
+    ) &
+    (Rest extends `${GetRouteParameter<Rest>}${infer Next}`
+        ? RouteParameters<Next> : unknown)
+    : {};
+
 type User = {
     name: string,
     id: string,
@@ -52,6 +91,52 @@ export function deconstruct<Conection extends Connections>(conection: Conection)
     return [conection.substring(0, index) as Path<Conection>, conection.substring(index + 2) as Method<Conection>];
 }
 
+export function transformRouteParameters<Connection extends Connections>(connection: Connection, params: express.RouteParameters<Path<Connection>>): InputPath<Connection> {
+    const result: any = {};
+    for (const key in params) {
+        if (Object.prototype.hasOwnProperty.call(params, key)) {
+            const type = getTypeForPathParameter(connection, key)
+            const element = params[key] as string;
+            if (type) {
+                if (type == 'boolean') {
+                    result[key] = element.toLocaleLowerCase() == 'true';
+                } else if (type == 'number') {
+                    result[key] = parseInt(element);
+                }
+                else {
+                    result[key] = element;
+                }
+            }
+        }
+    }
+    return result;
+}
+
+
+
+function getTypeForPathParameter<Connection extends Connections>(connection: Connection, param: keyof express.RouteParameters<Path<Connection>>) {
+    const [path, _] = deconstruct(connection);
+    const i = path.indexOf(`:${param}`);
+    if (!i) {
+        return undefined;
+    }
+    if (path[i + 1] != ':') {
+        return 'string'
+    }
+    if (path.startsWith('number', i + 2)) {
+        return 'number'
+    }
+    if (path.startsWith('string', i + 2)) {
+        return 'string'
+    }
+    if (path.startsWith('bool', i + 2)) {
+        return 'boolean'
+    }
+    if (path.startsWith('boolean', i + 2)) {
+        return 'boolean'
+    }
+    throw 'unknown type';
+}
 
 interface CommonError {
 
@@ -110,26 +195,26 @@ type def<TConnection extends Connections> =
         void, false>
 
     // group
-    : TConnection extends '/groups/:id->get' ? Set<void,
+    : TConnection extends '/groups/:groupId:number->get' ? Set<void,
         Group,
         void, true>
-    : TConnection extends '/groups/:id->put' ? Set<{ name: string /*, gm_id: string your are alwys the gm*/ },
+    : TConnection extends '/groups->put' ? Set<{ name: string /*, gm_id: string your are alwys the gm*/ },
         Group,
         void, true>
-    : TConnection extends '/groups/:id->delete' ? Set<void,
+    : TConnection extends '/groups/:groupId:number->delete' ? Set<void,
         void,
         void, true>
     // group user handling heandling
     : TConnection extends '/groups/my->get' ? Set<void,
-        { name: string }[],
+        Group[],
         void, true>
-    : TConnection extends '/groups/:id/users->get' ? Set<void,
+    : TConnection extends '/groups/:groupId:number/users->get' ? Set<void,
         User[],
         void, true>
-    : TConnection extends '/groups/:id/users->put' ? Set<User,
+    : TConnection extends '/groups/:groupId:number/users->put' ? Set<User,
         void,
         void, true>
-    : TConnection extends '/groups/:id/users->delete' ? Set<User,
+    : TConnection extends '/groups/:groupId:number/users->delete' ? Set<User,
         void,
         void, true>
 

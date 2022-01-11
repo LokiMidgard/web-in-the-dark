@@ -1,7 +1,8 @@
-import { Express as ExpressCore } from 'express-serve-static-core';
+import { Express as ExpressCore, RouteParameters as ExpressRouteParameters } from 'express-serve-static-core';
 
 import { RequestHandler, response, Request } from 'express';
 import { data } from 'blade-common';
+
 
 
 
@@ -9,8 +10,8 @@ type returnSuccess = 'success';
 type returnError = 'error' | 'not found' | 'authentication required' | 'forbidden';
 type returnStatus = returnSuccess | returnError;
 type returnArray<Connection extends data.Connections.Connections> = [returnSuccess, data.Result<Connection>] | [returnError, data.Error<Connection>];
-type callbackFunction<Connection extends data.Connections.Connections> = (input: callbackInput<Connection>, req: Request<data.InputPath<Connection>, data.Result<Connection> | data.Error<Connection>, data.InputBody<Connection>>) => Promise<returnArray<Connection> | 'skip'> | returnArray<Connection> | 'skip'
-type callbackInput<Connection extends data.Connections.Connections> = data.NeedsAuthentication<Connection> extends true
+export type callbackFunction<Connection extends data.Connections.Connections> = (input: callbackInput<Connection>, req: Request<ExpressRouteParameters<data.Path<Connection>>, data.Result<Connection> | data.Error<Connection>, data.InputBody<Connection>>) => Promise<returnArray<Connection> | 'skip'> | returnArray<Connection> | 'skip'
+export type callbackInput<Connection extends data.Connections.Connections> = data.NeedsAuthentication<Connection> extends true
     ? data.Input<Connection> & { authenticatedUserId: string }
     : data.Input<Connection>
 
@@ -18,6 +19,7 @@ export class BladeRouter {
     private app: ExpressCore;
     private constructor(app: ExpressCore) {
         this.app = app;
+
     }
 
     /**
@@ -36,15 +38,13 @@ app:ExpressCore     */
 
 
         const transformed = callbacks.map(callback => {
-            const c: RequestHandler<data.InputPath<Conection>, data.Result<Conection> | data.Error<Conection>, data.InputBody<Conection>> = async (req, res, next) => {
+            const c: RequestHandler<ExpressRouteParameters<data.Path<Conection>>, data.Result<Conection> | data.Error<Conection>, data.InputBody<Conection>> = async (req, res, next) => {
 
+                const input: callbackInput<Conection> =
+                    data.needsAuthentication(path)
+                        ? { ...req.body, ...data.transformRouteParameters(connection, req.params), authenticatedUserId: req.user!.id }
+                        : { ...req.body, ...data.transformRouteParameters(connection, req.params) } as callbackInput<Conection>;
 
-                let input: callbackInput<Conection>;
-                if (data.needsAuthentication(path)) {
-                    input = { ...req.body, ...req.params, authenticatedUserId: req.user!.id }
-                } else {
-                    input = { ...req.body, ...req.params } as callbackInput<Conection>;
-                }
                 let retunrValue;
                 try {
 
