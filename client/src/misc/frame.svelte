@@ -7,14 +7,19 @@
     import { flatStore } from "./flatstore";
 
     const data = flatStore(GlobalData.instance);
-    export let subtitle :string;
+    export let subtitle: string;
 
-    export let wide:boolean=false;
+    export let wide: boolean = false;
 
     function theme(t: "light" | "dark" | undefined) {
         console.log(t);
         if (t) document.querySelector("html").setAttribute("data-theme", t);
         else document.querySelector("html").removeAttribute("data-theme");
+    }
+
+    async function logout() {
+        await sendServer("/auth/logout->post", undefined);
+        await $data.updateState();
     }
 </script>
 
@@ -54,7 +59,7 @@
         <li><a href="/">Overview</a></li>
         {#if $data.name}
             <li><a href="/invite.html">Invete</a></li>
-            <li><a href="/auth/logout">logout</a></li>
+            <li><a href="#" on:click={logout}>logout</a></li>
         {:else}
             <li><a href="/login.html">Login</a></li>
         {/if}

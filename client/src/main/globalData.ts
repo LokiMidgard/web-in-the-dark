@@ -16,29 +16,34 @@ export class GlobalData {
     public static get instance(): GlobalData {
         if (!GlobalData._instance) {
             GlobalData._instance = new GlobalData();
-            (async () => {
-                try {
-                    console.log('get Data')
-                    const result = await sendServer(
-                        "/auth/isAuthenticated->get", undefined
-                    );
-                    if (result.successs)
-                        GlobalData._instance.result.set(result);
-                    else
-                        console.error(`Could not get authentication data${JSON.stringify(result)}`);
-
-                } catch (e) {
-                    console.error(e)
-                }
-            })();
+            GlobalData._instance.updateState();
         }
         return GlobalData._instance;
     }
 
-
-
-
     private constructor() {
 
     }
+
+    /**
+     * updateState
+     */
+    public async updateState() {
+        try {
+            console.log('get Data')
+            const result = await sendServer(
+                "/auth/isAuthenticated->get", undefined
+            );
+            if (result.successs)
+                GlobalData._instance.result.set(result);
+            else
+                console.error(`Could not get authentication data${JSON.stringify(result)}`);
+
+        } catch (e) {
+            console.error(e)
+        }
+
+    }
+
+
 }

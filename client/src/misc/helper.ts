@@ -66,15 +66,15 @@ type notEmpty<T extends Record<PropertyKey, any>> =
     ? void
     : T;
 
-    type combine <T1,T2> = T1 extends void
-    ?T2
-    :T2 extends void
-    ?T1
-    :T1&T2;
+type combine<T1, T2> = T1 extends void
+    ? T2
+    : T2 extends void
+    ? T1
+    : T1 & T2;
 
 
 
-type input<Conection extends data.Connections.Connections> = notEmpty<combine<data.InputBody<Conection> , express.RouteParameters<Conection>>>;
+type input<Conection extends data.Connections.Connections> = notEmpty<combine<data.InputBody<Conection>, express.RouteParameters<Conection>>>;
 
 // type RouteParameters<Conection extends data.Connections> = express.RouteParameters<Conection> extends {} ?
 // express.RouteParameters<Conection>
@@ -118,7 +118,7 @@ export async function sendServer<Conection extends data.Connections.Connections>
             } : undefined,
         });
 
-        const responseObj = await response.json() as (data.Result<Conection> & { status: number, successs: true }) | (data.Error<Conection> & { status: number, successs: false });
+        const responseObj = await getbody(response);
 
         responseObj.status = response.status;
         responseObj.successs = response.ok;
@@ -126,5 +126,16 @@ export async function sendServer<Conection extends data.Connections.Connections>
     } catch (error) {
         console.error(`Error sending ${connection}`, error)
         return { successs: false, status: 400, error: error }
+    }
+
+    async function getbody(response: Response): Promise<(data.Result<Conection> & { status: number; successs: true; }) | (data.Error<Conection> & { status: number; successs: false; })> {
+        // TODO Actually handle empty response and handle other parsing related errors...
+        try {
+            return await response.json() as any;
+        }
+        catch {
+            // empty response...
+            return undefined;
+        }
     }
 }

@@ -17,7 +17,9 @@ type NoStoreParameter<T> =
     }
     &
     {
-        readonly [Property in keyof T as ExcludeType<Property, T[Property], Writable<any>>]: T[Property] extends Readable<infer Args>
+        readonly [Property in keyof T as ExcludeType<Property, T[Property], Writable<any>>]: T[Property] extends Function
+        ? T[Property]
+        : T[Property] extends Readable<infer Args>
         ? NoStore<Args>
         : NoStore<T[Property]>
     }
@@ -88,15 +90,33 @@ function mapStoreInternal<T>(source: T, callbacks?: { update: () => void, onDest
                 }
 
             }
+
         }
+
+        for (const f of getAllFuncs(source)) {
+            result[f] = ((...args: any) => source[f](...args)) as any;
+        }
+
         return result;
     }
     else {
+
         // only stuff like string and bigint
         return source as any;
     }
 }
 
+function getAllFuncs(toCheck) {
+    const props: string[] = [];
+    let obj = toCheck;
+    do {
+        props.push(...Object.getOwnPropertyNames(obj));
+    } while (obj = Object.getPrototypeOf(obj));
+
+    return props.sort().filter((e, i, arr) => {
+        if (e != arr[i + 1] && typeof toCheck[e] == 'function') return true;
+    });
+}
 
 function isStore(value: any): value is Readable<any> {
     if (value)

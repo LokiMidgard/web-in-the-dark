@@ -3,14 +3,14 @@
 BEGIN;
 
 
-CREATE TABLE IF NOT EXISTS public."Group_Player"
+CREATE TABLE IF NOT EXISTS public.group_player
 (
-    "Group_id" integer NOT NULL,
+    group_id integer NOT NULL,
     user_id uuid NOT NULL,
-    PRIMARY KEY ("Group_id", user_id)
+    PRIMARY KEY (group_id, user_id)
 );
 
-CREATE TABLE IF NOT EXISTS public."Groups"
+CREATE TABLE IF NOT EXISTS public.groups
 (
     id serial NOT NULL,
     name text COLLATE pg_catalog."default" NOT NULL,
@@ -322,15 +322,15 @@ CREATE TABLE IF NOT EXISTS public.webauth_login
     PRIMARY KEY (user_id)
 );
 
-ALTER TABLE IF EXISTS public."Group_Player"
-    ADD CONSTRAINT "Group_Players_Groups_id_fkey" FOREIGN KEY ("Group_id")
-    REFERENCES public."Groups" (id) MATCH SIMPLE
+ALTER TABLE IF EXISTS public.group_player
+    ADD CONSTRAINT "Group_Players_Groups_id_fkey" FOREIGN KEY (group_id)
+    REFERENCES public.groups (id) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE NO ACTION
     NOT VALID;
 
 
-ALTER TABLE IF EXISTS public."Group_Player"
+ALTER TABLE IF EXISTS public.group_player
     ADD CONSTRAINT "Group_Players_user_id_fkey" FOREIGN KEY (user_id)
     REFERENCES public.users (id) MATCH SIMPLE
     ON UPDATE NO ACTION
@@ -338,7 +338,7 @@ ALTER TABLE IF EXISTS public."Group_Player"
     NOT VALID;
 
 
-ALTER TABLE IF EXISTS public."Groups"
+ALTER TABLE IF EXISTS public.groups
     ADD CONSTRAINT gm_fk FOREIGN KEY (gm)
     REFERENCES public.users (id) MATCH SIMPLE
     ON UPDATE NO ACTION
@@ -364,7 +364,7 @@ ALTER TABLE IF EXISTS public."character"
 
 ALTER TABLE IF EXISTS public."character"
     ADD CONSTRAINT character_group_fkey FOREIGN KEY ("group")
-    REFERENCES public."Groups" (id) MATCH SIMPLE
+    REFERENCES public.groups (id) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE NO ACTION
     NOT VALID;
@@ -532,7 +532,7 @@ ALTER TABLE IF EXISTS public.cohorts_modifier_cohorts
 
 ALTER TABLE IF EXISTS public.crews
     ADD FOREIGN KEY ("group")
-    REFERENCES public."Groups" (id) MATCH SIMPLE
+    REFERENCES public.groups (id) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE NO ACTION
     NOT VALID;
