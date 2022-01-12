@@ -28,14 +28,16 @@
         await promise;
         await $data.updateState();
     }
+
+    export let selectedGroup: number | undefined = undefined;
 </script>
 
 <nav>
     <ul>
         {#if $data.isAuthenticated}
-            <li>
-                {#if $data.groups.length > 0}
-                    <select>
+            {#if $data.groups.length > 0}
+                <li>
+                    <select bind:value={selectedGroup}>
                         {#if $data.groups.some((x) => x.gm.id == $data.id)}
                             <optgroup label="as GM">
                                 {#each $data.groups
@@ -59,18 +61,17 @@
                             </optgroup>
                         {/if}
                     </select>
-                {:else}
-                    <a class="outline" role="button" href="">Create a Group</a>
-                {/if}
-            </li>
-            <li>
-                <div class="grid">
-                    <input type="text" bind:value={groupName} />
-                    <button disabled={!groupName} on:click={createGroup}
-                        >Create Group</button
+                </li>
+                <li>
+                    <a href="/groups.html">Create a Group</a>
+                </li>
+            {:else}
+                <li>
+                    <a class="outline" role="button" href="/groups.html"
+                        >Create a Group</a
                     >
-                </div>
-            </li>
+                </li>
+            {/if}
         {/if}
         <!-- <li>
             <a

@@ -117,6 +117,6 @@ const COMMON = function (input, index) {
 
 
 
-const apps = [{ name: 'main', file: 'index' }, 'invite', 'login'];
+const apps = [{ name: 'main', file: 'index' }, 'invite', 'login', 'groups'];
 
 export default apps.map(COMMON);
