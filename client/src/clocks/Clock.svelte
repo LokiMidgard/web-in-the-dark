@@ -1,5 +1,7 @@
 <script lang="ts" context="module">
     import { delay, Dictionary, dictionary } from "./../misc/helper";
+    import { marked } from "marked";
+    import { htmlEncode } from "js-htmlencode";
 
     export interface ClockInstance {
         name: string;
@@ -167,7 +169,7 @@
             </div>
         {/if}
     </header>
-    <h6>{clock.name}</h6>
+    {@html marked(htmlEncode(clock.name))}
 
     {#if editable}
         <a href="#non" on:click={toggle}>Edit</a>
