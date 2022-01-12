@@ -177,7 +177,7 @@ type def<TConnection extends Connections> =
     }, void, false>
     : TConnection extends '/auth/isAuthenticated->get' ? Set<void, {
         isAuthenticated: boolean,
-        userName: string | undefined
+        user: User | undefined
     }, void, false>
 
     // Clocks

@@ -8,7 +8,8 @@ export class GlobalData {
     public readonly _groups = writable<data.Group[]>([]);
 
 
-    public readonly name = derived(this.result, x => x?.userName);
+    public readonly name = derived(this.result, x => x?.user?.name);
+    public readonly id = derived(this.result, x => x?.user?.id);
     public readonly isAuthenticated = derived(this.result, x => x?.isAuthenticated);
 
     public readonly groups = derived(this._groups, x => x);

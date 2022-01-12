@@ -120,16 +120,15 @@ export function Init(app: ExpressCore) {
         })
         .handle('/auth/isAuthenticated->get', async (input, req) => {
             const isAuthenticated = req.user ? true : false;
-            let name: string | undefined = undefined;
+            let user: common.data.User | undefined = undefined;
             if (isAuthenticated) {
-                const user = await db.getUser(req.user!.id);
-                name = user?.name;
+                 user = await db.getUser(req.user!.id);
             }
 
             return ['success', {
 
                 isAuthenticated: isAuthenticated,
-                userName: name
+                user: user
             }];
         })
 }

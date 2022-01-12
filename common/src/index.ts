@@ -42,7 +42,7 @@ export interface WebAuthN {
 
 export interface isAuthenticated {
     isAuthenticated: boolean;
-    userName: string | undefined;
+    user: data.User | undefined;
 }
 
 export function isLogin(obj: any): obj is Login {
