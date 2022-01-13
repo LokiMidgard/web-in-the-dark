@@ -1,6 +1,6 @@
 <script lang="ts">
     import { GlobalData } from "../main/globalData";
-    import { sendServer } from "./../misc/helper";
+    import { delay, sendServer } from "./../misc/helper";
     import { flatStore } from "./../misc/flatstore";
     import Frame from "../misc/frame.svelte";
 
@@ -14,9 +14,92 @@
         await $data.updateState();
     }
     let selectedGroup: number | undefined;
+    let isSelectedGroupGm: boolean;
+    $: isSelectedGroupGm =
+        $data.groups.filter((x) => x.id == selectedGroup)[0]?.gm.id == $data.id;
+    let inviteUserId: string | undefined;
+    let isInviteIdValid: boolean = false;
+    let inviteLoading: boolean = false;
+    let inviteEroor: string | undefined;
+    let inviteName: string | undefined;
+    $: checkInviteId(inviteUserId);
+    async function checkInviteId(id: string) {
+        if (!id) {
+            isInviteIdValid = false;
+            inviteLoading = false;
+            inviteEroor = undefined;
+        } else {
+            inviteEroor = undefined;
+            inviteLoading = true;
+            inviteName = undefined;
+
+            if (inviteUserId == $data.id) {
+                isInviteIdValid = false;
+                inviteEroor = "You can't invite yourself";
+            } else if (
+                !/[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}/g.test(
+                    inviteUserId
+                )
+            ) {
+                isInviteIdValid = false;
+                inviteEroor = "Not a valid user id";
+            } else {
+                await delay(1000);
+
+                if (id != inviteUserId) return;
+
+                const response = await sendServer(
+                    "/users/:userId:string->get",
+                    {
+                        userId: id,
+                    }
+                );
+
+                if (id != inviteUserId) return;
+
+                if (response.successs) {
+                    inviteName = response.name;
+                    const response2 = await sendServer(
+                        "/groups/:groupId:number/users->get",
+                        {
+                            groupId: selectedGroup,
+                        }
+                    );
+                    if (response2.successs) {
+                        const userInGroup = response2.filter(
+                            (x) => x.id == id
+                        )[0];
+                        if (userInGroup) {
+                            inviteEroor = `${userInGroup.name} is already part of your group`;
+                            isInviteIdValid = false;
+                        } else {
+                            inviteEroor = `${response.name} can be invited`;
+                            isInviteIdValid = true;
+                        }
+                    }
+                } else if (response.status == 404) {
+                    inviteEroor = `User with id ${id} not found.`;
+                    isInviteIdValid = false;
+                } else {
+                    console.error(response);
+                    inviteEroor = `An error occured.`;
+                    isInviteIdValid = false;
+                }
+            }
+
+            //this is not an an try finaly intentionaly
+            inviteLoading = false;
+        }
+    }
 </script>
 
 <Frame bind:selectedGroup subtitle="Manage your Groups...">
+    <article>
+        <header><h3>My infos</h3></header>
+        <p>{$data.name}</p>
+        <p><small>Id: {$data.id}</small></p>
+    </article>
+
     {#if selectedGroup}
         <article>
             <header>
@@ -28,12 +111,28 @@
                     </h4>
                 </hgroup>
             </header>
-            <p>Invite new scundreals to your group. (TODO)</p>
-            <label>
-                User ID
-                <input type="text" placeholder="What is the players User Id" />
-            </label>
-            <button disabled>Invite</button>
+            {#if isSelectedGroupGm}
+                <p>Invite new scundreals to your group. (TODO)</p>
+                <label>
+                    User ID
+                    <input
+                        bind:value={inviteUserId}
+                        type="text"
+                        placeholder="What is the players User Id"
+                    />
+                </label>
+                <small aria-busy={inviteLoading}
+                    >{!inviteUserId
+                        ? "Please select a User ID"
+                        : inviteLoading
+                        ? "Checking ID..."
+                        : inviteEroor}</small
+                >
+
+                <button disabled={!isInviteIdValid || inviteLoading}
+                    >Invite {inviteName ?? ""}</button
+                >
+            {/if}
         </article>
     {/if}
     <article>

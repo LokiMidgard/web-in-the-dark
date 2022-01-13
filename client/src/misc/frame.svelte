@@ -73,27 +73,6 @@
                 </li>
             {/if}
         {/if}
-        <!-- <li>
-            <a
-                href="#non"
-                on:click={() => theme(undefined)}
-                class="contrast"
-                data-theme-switcher="auto"><small>Auto</small></a
-            >
-        </li>
-        <li>
-            <a href="#non" on:click={() => theme("light")} class="contrast"
-                ><small>Light</small></a
-            >
-        </li>
-        <li>
-            <a
-                href="#non"
-                on:click={() => theme("dark")}
-                class="contrast"
-                data-theme-switcher="dark"><small>Dark</small></a
-            >
-        </li> -->
     </ul>
     <ul>
         <li>

@@ -79,7 +79,7 @@ export type User = {
     id: string,
     granted_by: string,
 }
-export interface Group  {
+export interface Group {
     name: string
     id: number
     gm: User
@@ -216,6 +216,11 @@ type def<TConnection extends Connections> =
         void, true>
     : TConnection extends '/groups/:groupId:number/users->delete' ? Set<User,
         void,
+        void, true>
+
+    // users
+    : TConnection extends '/users/:userId:string->get' ? Set<void,
+        User,
         void, true>
 
     // default

@@ -86,7 +86,9 @@ app:ExpressCore     */
         })
 
 
-        this.app[method](path, transformed);
+        const removedTypes = path.replace(/\/:(?<value>[^\/:]+)(:[^\/]+)?/g, '/:$<value>');
+
+        this.app[method](removedTypes, transformed);
         return this;
     }
 }

@@ -87,21 +87,21 @@ export async function sendServerThrow<Conection extends data.Connections.Connect
 export async function sendServer<Conection extends data.Connections.Connections>(connection: Conection, input: input<Conection>): Promise<(data.Result<Conection> & { status: number, successs: true }) | (data.Error<Conection> & { status: number, successs: false })> {
     try {
         const [path, method] = data.deconstruct(connection);
-        const reg = /\/:(?<value>[^\/]*)/g
+        const reg = /\/:(?<value>[^\/:]+)(:[^\/]+)?/g
         const matches = [...path.matchAll(reg)];
-        const values = matches.map(x => x.groups ? x.groups['value'] : '')
+        const values = matches.map(x => x.groups ? [x.groups['value'], x[0]] : undefined)
             .filter(x => x);
 
         let actualPath: string = path;
 
         for (const v of values) {
-            const value = input[v as keyof input<Conection>];
-            actualPath = actualPath.replace(`:${v}`, String(value))
+            const value = input[v[0] as keyof input<Conection>];
+            actualPath = actualPath.replace(v[1], `/${String(value)}`)
         }
 
         let datax: any | undefined = {}
         if (input)
-            for (const p of Object.keys(input as any).filter(x => !values.includes(x))) {
+            for (const p of Object.keys(input as any).filter(x => !values.map(y => y[0]).includes(x))) {
                 datax[p] = input[p as keyof input<Conection>];
             }
 
@@ -116,7 +116,7 @@ export async function sendServer<Conection extends data.Connections.Connections>
             } : undefined,
         });
 
-        const responseObj = await getbody(response);
+        const responseObj = await getbody(response) ?? ({} as any);
 
         responseObj.status = response.status;
         responseObj.successs = response.ok;
