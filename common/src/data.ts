@@ -211,10 +211,10 @@ type def<TConnection extends Connections> =
     : TConnection extends '/groups/:groupId:number/users->get' ? Set<void,
         User[],
         void, true>
-    : TConnection extends '/groups/:groupId:number/users->put' ? Set<User,
+    : TConnection extends '/groups/:groupId:number/users->put' ? Set<{id:string},
         void,
         void, true>
-    : TConnection extends '/groups/:groupId:number/users->delete' ? Set<User,
+    : TConnection extends '/groups/:groupId:number/users->delete' ? Set<{id:string},
         void,
         void, true>
 

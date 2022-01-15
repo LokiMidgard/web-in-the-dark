@@ -91,6 +91,13 @@
             inviteLoading = false;
         }
     }
+
+    async function invite(userId: string) {
+        await sendServer("/groups/:groupId:number/users->put", {
+            id: userId,
+            groupId: selectedGroup,
+        });
+    }
 </script>
 
 <Frame bind:selectedGroup subtitle="Manage your Groups...">
@@ -129,7 +136,9 @@
                         : inviteEroor}</small
                 >
 
-                <button disabled={!isInviteIdValid || inviteLoading}
+                <button
+                    on:click={() => invite(inviteUserId)}
+                    disabled={!isInviteIdValid || inviteLoading}
                     >Invite {inviteName ?? ""}</button
                 >
             {/if}
