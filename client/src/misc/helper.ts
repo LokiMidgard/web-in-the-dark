@@ -123,7 +123,7 @@ export async function sendServer<Conection extends data.Connections.Connections>
         return responseObj;
     } catch (error) {
         console.error(`Error sending ${connection}`, error)
-        return { successs: false, status: 400, error: error }
+        return { successs: false, status: 400, error: error, message: error?.message }
     }
 
     async function getbody(response: Response): Promise<(data.Result<Conection> & { status: number; successs: true; }) | (data.Error<Conection> & { status: number; successs: false; })> {

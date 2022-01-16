@@ -111,6 +111,8 @@ CREATE TABLE IF NOT EXISTS public.claims
     description text COLLATE pg_catalog."default" NOT NULL,
     type claim_type NOT NULL DEFAULT 'normal',
     playbook integer NOT NULL,
+    x_pos integer,
+    y_pos integer,
     CONSTRAINT claims_pkey PRIMARY KEY (id)
 );
 
@@ -170,7 +172,7 @@ CREATE TABLE IF NOT EXISTS public.invites
     CONSTRAINT invites_pkey PRIMARY KEY (id)
 );
 
-CREATE TABLE IF NOT EXISTS public.specail_abilities_crew
+CREATE TABLE IF NOT EXISTS public.special_abilities_crew
 (
     id serial NOT NULL,
     name text COLLATE pg_catalog."default" NOT NULL,
@@ -227,7 +229,7 @@ CREATE TABLE IF NOT EXISTS public.crew_upgrades
     name text NOT NULL,
     playbook integer,
     max_get integer NOT NULL DEFAULT 1,
-    sloots integer NOT NULL DEFAULT 1,
+    slots integer NOT NULL DEFAULT 1,
     category text NOT NULL,
     PRIMARY KEY (id)
 );
@@ -270,17 +272,17 @@ CREATE TABLE IF NOT EXISTS public.cohorts_modifier_cohorts
 CREATE TABLE IF NOT EXISTS public.crews
 (
     id serial NOT NULL,
-    name text NOT NULL,
+    name text NOT NULL DEFAULT '',
     "group" integer NOT NULL,
     playbook integer NOT NULL,
     rep integer NOT NULL DEFAULT 0,
     hold hold NOT NULL DEFAULT 'strong',
     tier integer NOT NULL DEFAULT 0,
     heat integer NOT NULL DEFAULT 0,
-    wnated_level integer NOT NULL DEFAULT 0,
+    wanted_level integer NOT NULL DEFAULT 0,
     coin integer NOT NULL DEFAULT 2,
     "vaults " integer NOT NULL DEFAULT 0,
-    lair text NOT NULL,
+    lair text NOT NULL DEFAULT '',
     xp integer NOT NULL DEFAULT 0,
     notes text NOT NULL DEFAULT '',
     PRIMARY KEY (id)
@@ -294,11 +296,11 @@ CREATE TABLE IF NOT EXISTS public.crew_upgrades_taken
     PRIMARY KEY (crews_id, crew_upgrades_id)
 );
 
-CREATE TABLE IF NOT EXISTS public.specail_abilities_crew_taken
+CREATE TABLE IF NOT EXISTS public.special_abilities_crew_taken
 (
-    specail_abilities_crew_id serial NOT NULL,
+    special_abilities_crew_id serial NOT NULL,
     crews_id serial NOT NULL,
-    PRIMARY KEY (specail_abilities_crew_id, crews_id)
+    PRIMARY KEY (special_abilities_crew_id, crews_id)
 );
 
 CREATE TABLE IF NOT EXISTS public.crew_contacts
@@ -320,6 +322,12 @@ CREATE TABLE IF NOT EXISTS public.webauth_login
     created timestamp without time zone NOT NULL DEFAULT NOW(),
     "signCount" integer NOT NULL,
     PRIMARY KEY (user_id)
+);
+
+CREATE TABLE IF NOT EXISTS public.claimed
+(
+    claim_id integer NOT NULL,
+    crew_id integer NOT NULL
 );
 
 ALTER TABLE IF EXISTS public.group_player
@@ -450,7 +458,7 @@ ALTER TABLE IF EXISTS public.invites
     NOT VALID;
 
 
-ALTER TABLE IF EXISTS public.specail_abilities_crew
+ALTER TABLE IF EXISTS public.special_abilities_crew
     ADD CONSTRAINT possible_specail_abilities_crew_playbook_fkey FOREIGN KEY (playbook)
     REFERENCES public.crew_playbooks (id) MATCH SIMPLE
     ON UPDATE NO ACTION
@@ -562,15 +570,15 @@ ALTER TABLE IF EXISTS public.crew_upgrades_taken
     NOT VALID;
 
 
-ALTER TABLE IF EXISTS public.specail_abilities_crew_taken
-    ADD FOREIGN KEY (specail_abilities_crew_id)
-    REFERENCES public.specail_abilities_crew (id) MATCH SIMPLE
+ALTER TABLE IF EXISTS public.special_abilities_crew_taken
+    ADD FOREIGN KEY (special_abilities_crew_id)
+    REFERENCES public.special_abilities_crew (id) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE NO ACTION
     NOT VALID;
 
 
-ALTER TABLE IF EXISTS public.specail_abilities_crew_taken
+ALTER TABLE IF EXISTS public.special_abilities_crew_taken
     ADD FOREIGN KEY (crews_id)
     REFERENCES public.crews (id) MATCH SIMPLE
     ON UPDATE NO ACTION
@@ -591,6 +599,22 @@ ALTER TABLE IF EXISTS public.webauth_login
     REFERENCES public.users (id) MATCH SIMPLE
     ON UPDATE NO ACTION
     ON DELETE CASCADE
+    NOT VALID;
+
+
+ALTER TABLE IF EXISTS public.claimed
+    ADD FOREIGN KEY (claim_id)
+    REFERENCES public.claims (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
+    NOT VALID;
+
+
+ALTER TABLE IF EXISTS public.claimed
+    ADD FOREIGN KEY (crew_id)
+    REFERENCES public.crews (id) MATCH SIMPLE
+    ON UPDATE NO ACTION
+    ON DELETE NO ACTION
     NOT VALID;
 
 END;

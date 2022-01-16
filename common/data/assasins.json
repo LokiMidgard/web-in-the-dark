@@ -1,0 +1,220 @@
+{
+    "$schema": "./crew.playbook.schema.json",
+    "name": "Assassins",
+    "subtitle": "Murderers for hire",
+    "reputation": {
+        "maximum": 12,
+        "turf": 6
+    },
+    "maximum-heat": 9,
+    "claims": [
+        {
+            "name": "Training Rooms",
+            "description": "+1 scale for your Skulks cohorts",
+        },
+        {
+            "name": "Vice Den",
+            "description": "(Tier roll) - Heat = coin in downtime"
+        },
+        {
+            "name": "Fixer",
+            "description": "+2 coin for lower class targets"
+        },
+        {
+            "name": "Informants",
+            "description": "+1d geather info for scores"
+        },
+        {
+            "name": "Hagfish Farm",
+            "description": "Body disposal, +1d to reduce heat after killing"
+        },
+        {
+            "name": "Victim Trophies",
+            "description": "+1 rep per score"
+        },
+        {
+            "type": "turf"
+        },
+        {
+            "type": "lair"
+        },
+        {
+            "type": "turf"
+        },
+        {
+            "name": "Cover operation",
+            "description": "-2 heat per score"
+        },
+        {
+            "name": "Protection Racket",
+            "description": "(Tier roll) - Heat = coin in downtime"
+        },
+        {
+            "name": "Infirmary",
+            "description": "+1d to healing rolls"
+        },
+        {
+            "name": "Envoy",
+            "description": "+2 coin for high-class targets"
+        },
+        {
+            "name": "Cover Identities",
+            "description": "+1d engagment for deception and socail plans"
+        },
+        {
+            "name": "City Records",
+            "description": "+1d engagment for stealth plans"
+        }
+    ],
+    "claim-connections": [
+        {
+            "a": 0,
+            "b": 1
+        },
+        {
+            "a": 0,
+            "b": 5
+        },
+        {
+            "a": 1,
+            "b": 6
+        },
+        {
+            "a": 2,
+            "b": 7
+        },
+        {
+            "a": 3,
+            "b": 8
+        },
+        {
+            "a": 3,
+            "b": 4
+        },
+        {
+            "a": 4,
+            "b": 9
+        },
+        {
+            "a": 5,
+            "b": 10
+        },
+        {
+            "a": 6,
+            "b": 7
+        },
+        {
+            "a": 6,
+            "b": 11
+        },
+        {
+            "a": 7,
+            "b": 8
+        },
+        {
+            "a": 7,
+            "b": 12
+        },
+        {
+            "a": 8,
+            "b": 9
+        },
+        {
+            "a": 9,
+            "b": 14
+        },
+        {
+            "a": 10,
+            "b": 11
+        },
+        {
+            "a": 13,
+            "b": 14
+        }
+    ],
+    "abilities": [
+        {
+            "name": "Deadly",
+            "description": "Each PC may add +1 action rating to Hunt, Prowl, or Skirmish (up to a max rating of 3)"
+        },
+        {
+            "name": "Corw's Veil",
+            "description": "Due to had-won experience or ocult ritual, your activities are hidden from the notice of the death seeker crows. You don't take extra heat when killing is involved on a score."
+        },
+        {
+            "name": "Emberdeath",
+            "description": "Due to hand-won experience or occult ritual, you know the arcane method to destroy a living victim's spirit at the moment you kill them, Take 3 stress to channel electoplasmic enegy from the ghost fielt to disintegrate the spirit and dead body in a shower of sparking embers"
+        },
+        {
+            "name": "No Traces",
+            "description": "When you keep an operation quiet or mak it look like an accident, you get half the rep value of the target (round up) instead of zero. When you end downtime with zero heat, take +1 rep."
+        },
+        {
+            "name": "Patron",
+            "description": "When you advance your Tier, it costs half the coin it normally would, Who is your patron? Why do they help you?"
+        },
+        {
+            "name": "Predators",
+            "description": "When you use stealth or subtefuge to commit murder, take +1d to the engagment roll."
+        },
+        {
+            "name": "Vipers",
+            "description": "When you acqire or craft poisons, you get +1 result level to your role. When you employ a poison, you are specially perpared to be immune to its effects"
+        }
+    ],
+    "xp-trigger": "Execute a successfull accident, disappearance, murder, or ransom operation",
+    "contacts": [
+        {
+            "name": "Trev",
+            "description": "a gang boss"
+        },
+        {
+            "name": "Lydra",
+            "description": "a deal broker"
+        },
+        {
+            "name": "Irimina",
+            "description": "a vicious nobel"
+        },
+        {
+            "name": "Karlos",
+            "description": "a bounty hunter"
+        },
+        {
+            "name": "Exeter",
+            "description": "a spirit warden"
+        },
+        {
+            "name": "Sevoy",
+            "description": "a merchant lord"
+        }
+    ],
+    "upgrades": [
+        {
+            "name": "Assassin rigging (2 free load of weapons or gear"
+        },
+        {
+            "name": "Ironhook Contacts (+1 Tier in prison)"
+        },
+        {
+            "name": "Elite Skulks"
+        },
+        {
+            "name": "Elite Thugs"
+        },
+        {
+            "name": "Hardened (+1 trauma box)",
+            "slots": 3
+        }
+    ],
+    "start-upgrades": [
+        "Insight",
+        "Prowess"
+    ],
+    "hunting-ground": [
+        "Accident",
+        "Disappearance",
+        "Murder",
+        "Ransom"
+    ]
+}

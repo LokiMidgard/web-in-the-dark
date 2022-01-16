@@ -1,0 +1,204 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://web-in-the-dar.org/schema/crew-playbook",
+    "type": "object",
+    "properties": {
+        "name": {
+            "type": "string"
+        },
+        "subtitle": {
+            "type": "string"
+        },
+        "reputation": {
+            "type": "object",
+            "required": [
+                "maximum",
+                "turf"
+            ],
+            "properties": {
+                "maximum": {
+                    "type": "number"
+                },
+                "turf": {
+                    "type": "number"
+                }
+            }
+        },
+        "claims": {
+            "type": "array",
+            "items": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "required": [
+                            "type"
+                        ],
+                        "properties": {
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "turf",
+                                    "lair"
+                                ]
+                            }
+                        }
+                    },
+                    {
+                        "type": "object",
+                        "required": [
+                            "name",
+                            "description"
+                        ],
+                        "properties": {
+                            "name": {
+                                "type": "string"
+                            },
+                            "description": {
+                                "type": "string"
+                            },
+                            "type": {
+                                "type": "string",
+                                "default": "normal",
+                                "enum": [
+                                    "normal"
+                                ]
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        "claim-columns": {
+            "type": "number",
+            "default": 5
+        },
+        "claim-connections": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "a": {
+                        "type": "number"
+                    },
+                    "b": {
+                        "type": "number"
+                    }
+                }
+            }
+        },
+        "maximum-heat": {
+            "type": "number"
+        },
+        "vault-levels": {
+            "type": "array",
+            "items": {
+                "type": "number"
+            },
+            "default": [
+                4,
+                4,
+                8
+            ],
+            "description": "Defines how much coins the crew can hold the first index is without vault the seccond is with the first etc..."
+        },
+        "veteran-abilities": {
+            "type": "number",
+            "default": 3
+        },
+        "abilities": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "crew-xp-maximum": {
+            "type": "number",
+            "default": 10
+        },
+        "xp-trigger": {
+            "type": "string"
+        },
+        "contacts": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "upgrades": {
+            "type": "array",
+            "description": "Crew specific upgrades",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "slots": {
+                        "type": "number",
+                        "default": 1,
+                        "description": "The times the upgrade needs to be taken to activate."
+                    },
+                    "max-get": {
+                        "type": "number",
+                        "default": 1,
+                        "description": "The maximum amount this upgrade can be taken."
+                    }
+                }
+            }
+        },
+        "start-upgrades": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "examples": [
+                    "Carriage",
+                    "Boat",
+                    "Hidden",
+                    "Quarters",
+                    "Secure",
+                    "Vault",
+                    "Workshop",
+                    "Documents",
+                    "Gear",
+                    "Implements",
+                    "Supplies",
+                    "Tools",
+                    "Weapons",
+                    "Insight",
+                    "Prowess",
+                    "Resolve",
+                    "Personal",
+                    "Mastery"
+                ]
+            }
+        },
+        "hunting-ground": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "starting-cohorts": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        }
+    }
+}

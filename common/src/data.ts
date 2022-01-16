@@ -86,6 +86,75 @@ export interface Group {
 }
 
 
+
+export type PlayerPlaybook = {
+
+}
+
+export type CrewPlaybook = {
+    name: string,
+    id: number,
+    maxRep: number,
+    maxHeat: number,
+    maxXp: number,
+    caultIncrease: number[],
+    xpTrigger: string,
+    numberOfVeteranAbilitys: number
+}
+
+export type Crew = {
+    name: string,
+    playbook: CrewPlaybook,
+    rep: number,
+
+    hold: 's' | 'w',
+    tier: number,
+    heat: number,
+    wanted: number,
+    coin: number,
+    vaults: number,
+    lair: string,
+    xp: number,
+    notes: string
+
+    claims: {
+        name: string,
+        description: string,
+        type: 'normal' | 'turf' | 'lair'
+        position?: [number, number][],
+        taken: boolean
+    }[],
+    abbilitys: {
+        name: string,
+        text: string
+    }[],
+    cohorts: {
+        armor: boolean,
+        kind: 'gang' | 'expert',
+        state: 'normal' | 'weak' | 'impared' | 'broken',
+        type: {
+            name: string,
+            description: string
+        },
+        edges: {
+            name: string,
+            description: string
+        }[],
+        flaws: {
+            name: string,
+            description: string
+        }[]
+    }[],
+    upgrades: {
+        category: string,
+        values: {
+            name: string,
+            amount: number
+        }[]
+    }[]
+}
+
+
 export function deconstruct<Conection extends Connections>(conection: Conection): [Path<Conection>, Method<Conection>] {
     const index = conection.indexOf('->');
     return [conection.substring(0, index) as Path<Conection>, conection.substring(index + 2) as Method<Conection>];
@@ -139,7 +208,7 @@ function getTypeForPathParameter<Connection extends Connections>(connection: Con
 }
 
 interface CommonError {
-
+    message: string
 }
 
 
@@ -204,6 +273,13 @@ type def<TConnection extends Connections> =
     : TConnection extends '/groups/:groupId:number->delete' ? Set<void,
         void,
         void, true>
+    : TConnection extends '/groups/:groupId:number/crew->get' ? Set<void,
+        Crew,
+        void, true>
+    : TConnection extends '/groups/:groupId:number/crewplaybook->patch' ? Set<{ playbookId: number },
+        void,
+        void, true>
+
     // group user handling heandling
     : TConnection extends '/groups/my->get' ? Set<void,
         Group[],
@@ -211,16 +287,36 @@ type def<TConnection extends Connections> =
     : TConnection extends '/groups/:groupId:number/users->get' ? Set<void,
         User[],
         void, true>
-    : TConnection extends '/groups/:groupId:number/users->put' ? Set<{id:string},
+    : TConnection extends '/groups/:groupId:number/users->put' ? Set<{ id: string },
         void,
         void, true>
-    : TConnection extends '/groups/:groupId:number/users->delete' ? Set<{id:string},
+    : TConnection extends '/groups/:groupId:number/users->delete' ? Set<{ id: string },
         void,
         void, true>
 
     // users
     : TConnection extends '/users/:userId:string->get' ? Set<void,
         User,
+        void, true>
+
+    // playbooks
+    : TConnection extends '/playbooks/crew->head' ? Set<void,
+        { id: number, name: string }[],
+        void, true>
+    : TConnection extends '/playbooks/crew->get' ? Set<void,
+        CrewPlaybook[],
+        void, true>
+    : TConnection extends '/playbooks/crew/:id:number->get' ? Set<void,
+        CrewPlaybook,
+        void, true>
+    : TConnection extends '/playbooks/player->get' ? Set<void,
+        PlayerPlaybook[],
+        void, true>
+    : TConnection extends '/playbooks/player/:id:number->get' ? Set<void,
+        PlayerPlaybook,
+        void, true>
+    : TConnection extends '/playbooks/player->head' ? Set<void,
+        { id: number, name: string }[],
         void, true>
 
     // default

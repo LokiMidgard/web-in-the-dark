@@ -6,7 +6,7 @@
 
 import { promises as fs } from "fs";
 
-
+import { compile, compileFromFile } from 'json-schema-to-typescript'
 
 import * as ts from 'typescript';
 import { Project, StructureKind } from "ts-morph";
@@ -16,6 +16,7 @@ import { randomUUID } from "crypto";
 async function work() {
 
 
+    console.log('generate REST pathes')
     const dataStream = await fs.readFile('./src/data.ts');
 
     const dataContent = dataStream.toString();
@@ -44,6 +45,7 @@ async function work() {
     txt += ';'
 
 
+    console.log('Write REST pathes')
     await fs.writeFile('src/data.g.ts', txt);
 
 
@@ -53,26 +55,10 @@ async function work() {
         ts.sys as any
     );
 
-    // // const files = parsedCMD!.fileNames;
-    // const files = ['./src/data.ts'];
-
-    // console.log(files)
-    // const program = ts.createProgram(files, parsedCMD!.options);
-
-    // const checker = program.getTypeChecker();
-    // const sourceFile = program.getSourceFile('./src/data.ts')!;
-
-    // const s = ts.createSourceFile('test.ts', 'import * as x from "./src/data.ts" ; const shouldBeFalse = x.needsAuthentication("bar")',ts.ScriptTarget.ESNext);
-
-    // ts.forEachChild(s, (node: ts.Node) => {
-    //     if (ts.isVariableStatement(node)) {
-    //         const type = checker.getTypeAtLocation(node.declarationList.declarations[0].getChildren().filter(ts.isCallExpression)[0]);
-    //         console.log(checker.typeToString( type));
-
-    //     }
-    // });
 
 
+
+    console.log('generate types')
     // initialize
     const project = new Project({});
 
@@ -80,10 +66,11 @@ async function work() {
     project.addSourceFilesAtPaths("src/**/*.ts");
 
 
+    const checker = project.getTypeChecker();
     function Test(path: string) {
         const dataFile = project.createSourceFile(`src/${randomUUID()}.ts`, `import * as x from "./data" ; const check = x.needsAuthentication("${path}")`);
         const declaraiton = dataFile.getVariableDeclarationOrThrow('check');
-        const result = project.getTypeChecker().getTypeText(declaraiton.getType());
+        const result = checker.getTypeText(declaraiton.getType());
         return result.toLowerCase() == 'true';
     }
     const pathChecks = paths.map(x => [x, Test(x)]).reduce((p: any, v: any) => {
@@ -93,6 +80,12 @@ async function work() {
 
     let authenticationText = `export const lookup = ${JSON.stringify(pathChecks)} as const;`
     await fs.writeFile('src/data-authentication.g.ts', authenticationText);
+
+
+    // compile schemas
+    console.log('generate schemas')
+
+    await compileFromFile('data/crew.playbook.schema.json').then(ts => fs.writeFile('src/import.g.d.ts', ts))
 
 }
 
